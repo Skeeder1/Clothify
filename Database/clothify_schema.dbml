@@ -1,0 +1,126 @@
+// Clothify Database Schema
+// PostgreSQL Job Queue System for AI Image Generation
+
+Project clothify {
+  database_type: 'PostgreSQL'
+  Note: 'Discord bot for generating e-commerce product images using AI'
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+Enum job_status {
+  pending     [note: 'Waiting to be processed']
+  processing  [note: 'Currently being processed by a worker']
+  done        [note: 'Successfully completed']
+  error       [note: 'Failed after max retries']
+  sent        [note: 'Result sent back to Discord']
+}
+
+Enum garment_type {
+  echarpe
+  pull
+  tshirt
+  chemise
+  veste
+  manteau
+  pantalon
+  jean
+  short
+  jupe
+  robe
+  bonnet
+  casquette
+  sac
+  other
+}
+
+Enum size_code {
+  "1" [note: 'Petit - Gros plan']
+  "2" [note: 'Standard - Vue classique']
+  "3" [note: 'Moyen - Avec contexte']
+  "4" [note: 'Grand - Vue ensemble']
+}
+
+// ============================================
+// TABLES
+// ============================================
+
+Table users {
+  id UUID [pk, default: `uuid_generate_v4()`]
+  discord_id VARCHAR(20) [unique, not null, note: 'Discord user ID']
+  discord_name VARCHAR(100)
+  created_at TIMESTAMP [default: `NOW()`]
+  last_seen_at TIMESTAMP [default: `NOW()`]
+  total_jobs INTEGER [default: 0]
+  is_active BOOLEAN [default: true]
+
+  indexes {
+    discord_id
+  }
+}
+
+Table jobs {
+  id UUID [pk, default: `uuid_generate_v4()`]
+  user_id UUID [ref: > users.id, note: 'ON DELETE SET NULL']
+  discord_message_id VARCHAR(20)
+  custom_prompt TEXT [note: 'Optional user prompt for AI']
+  input_file_paths TEXT [not null, note: 'JSON array of input image paths']
+  output_file_path TEXT [note: 'Generated image path']
+  product_name VARCHAR(255) [note: 'Unique product ID (e.g., ABC123)']
+  garment garment_type [default: 'other']
+  size size_code [default: '2']
+  status job_status [default: 'pending']
+
+  // Queue management columns
+  attempts INTEGER [default: 0, note: 'Number of processing attempts']
+  max_attempts INTEGER [default: 3, note: 'Maximum retry attempts']
+  error_message TEXT [note: 'Last error message if failed']
+
+  // Timestamps
+  created_at TIMESTAMP [default: `NOW()`]
+  started_at TIMESTAMP [note: 'When processing started']
+  completed_at TIMESTAMP [note: 'When processing completed']
+
+  indexes {
+    status
+    user_id
+    created_at
+  }
+}
+
+Table job_logs {
+  id SERIAL [pk]
+  job_id UUID [ref: > jobs.id, note: 'ON DELETE CASCADE']
+  status job_status [not null]
+  message TEXT
+  created_at TIMESTAMP [default: `NOW()`]
+
+  indexes {
+    job_id
+  }
+}
+
+// ============================================
+// FUNCTIONS (Documentation)
+// ============================================
+
+// complete_job(job_id UUID, output_path TEXT) -> VOID
+// Marks a job as successfully completed
+
+// fail_job(job_id UUID, error_msg TEXT) -> VOID
+// Marks a job as failed (retries if attempts < max_attempts)
+
+// reset_stale_jobs(timeout_minutes INTEGER DEFAULT 5) -> INTEGER
+// Resets jobs stuck in processing for too long
+
+// get_queue_stats() -> TABLE(pending, processing, done, error, oldest_pending)
+// Returns queue statistics for monitoring
+
+// ============================================
+// TRIGGERS (Documentation)
+// ============================================
+
+// trg_n8n_new_job -> notify_n8n_new_job()
+// Sends NOTIFY to 'n8n_jobs_channel' when new pending job is inserted
