@@ -77,6 +77,31 @@ def file_exists(file_path: str) -> bool:
     return Path(file_path).exists()
 
 
+def docker_to_host_path(docker_path: str) -> str:
+    """
+    Convert a Docker container path to host path.
+
+    Docker mapping (from docker-compose.yml):
+        ./images/input  → /files/input   (in n8n)
+        ./images/output → /files/output  (in n8n)
+
+    Args:
+        docker_path: Path as seen from Docker container
+
+    Returns:
+        Path as seen from host
+    """
+    if not docker_path:
+        return docker_path
+
+    if docker_path.startswith("/files/input/"):
+        return docker_path.replace("/files/input/", "images/input/")
+    if docker_path.startswith("/files/output/"):
+        return docker_path.replace("/files/output/", "images/output/")
+
+    return docker_path
+
+
 def get_file_size(file_path: str) -> int:
     """Get file size in bytes."""
     return Path(file_path).stat().st_size if file_exists(file_path) else 0

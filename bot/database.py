@@ -172,6 +172,25 @@ async def get_done_jobs() -> list[asyncpg.Record]:
         return rows
 
 
+async def get_job_output(job_id: UUID) -> Optional[str]:
+    """
+    Get output_file_path for a specific job.
+
+    Args:
+        job_id: Job UUID
+
+    Returns:
+        Output file path or None if not yet available
+    """
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT output_file_path FROM jobs WHERE id = $1",
+            job_id
+        )
+        return row["output_file_path"] if row else None
+
+
 async def update_job_status(job_id: UUID, status: str, message: Optional[str] = None) -> None:
     """
     Update job status.

@@ -9,6 +9,7 @@ import discord
 
 from ..config import config
 from ..database import get_or_create_user, create_job, generate_unique_product_id
+from .tasks import start_job_watcher
 
 logger = logging.getLogger(__name__)
 
@@ -221,6 +222,9 @@ class SizeSelectView(discord.ui.View):
                 size=size,
                 custom_prompt=upload.custom_prompt
             )
+
+            # Start job watcher (monitors DB and sends image when ready)
+            await start_job_watcher(job_id, upload.original_message, product_id)
 
             # React to original message
             try:

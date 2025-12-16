@@ -14,7 +14,7 @@ import discord
 from .config import config
 from .database import init_pool, close_pool
 from .handlers.message import setup_message_handler
-from .handlers.tasks import start_polling_task, stop_polling_task
+from .handlers.tasks import set_discord_client
 from .utils.files import ensure_directories_exist
 
 # Configure logging
@@ -63,8 +63,8 @@ def create_bot() -> discord.Client:
             logger.error(f"Failed to initialize database: {e}")
             logger.error("Bot will continue but database operations will fail")
 
-        # Start background polling task
-        start_polling_task()
+        # Set Discord client for job watchers
+        set_discord_client(client)
 
         logger.info("Clothify Bot is ready!")
 
@@ -92,9 +92,6 @@ async def shutdown(client: discord.Client) -> None:
         client: Discord client to shut down
     """
     logger.info("Shutting down...")
-
-    # Stop polling task
-    stop_polling_task()
 
     # Close database pool
     await close_pool()
