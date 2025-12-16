@@ -1,6 +1,32 @@
 services:
+  # ===========================================
+  # PostgreSQL Database
+  # ===========================================
+  postgres:
+    image: postgres:16
+    container_name: clothify_postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-postgres}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-postgres}
+      - POSTGRES_DB=${POSTGRES_DB:-clothify}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./Database/scripts/init:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-clothify}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================
+  # n8n Workflow Automation
+  # ===========================================
   n8n:
     image: n8nio/n8n:latest
+    container_name: clothify_n8n
     restart: unless-stopped
     ports:
       - "5678:5678"
@@ -8,12 +34,22 @@ services:
       - GENERIC_TIMEZONE=Europe/Paris
       - TZ=Europe/Paris
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
-      - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}   # ← CRUCIAL
-      - DISCORD_TOKEN=${DISCORD_TOKEN}           # ← CRUCIAL
+      - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      # Database connection for n8n workflows
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_DATABASE=${POSTGRES_DB:-clothify}
+      - DB_POSTGRESDB_USER=${POSTGRES_USER:-postgres}
+      - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
     volumes:
       - n8n-data:/home/node/.n8n
-      - /home/luffy/Github/Clothify/images/input:/files/input
-      - /home/luffy/Github/Clothify/images/output:/files/output
+      - ./images/input:/files/input
+      - ./images/output:/files/output
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
+  postgres-data:
   n8n-data:

@@ -3,15 +3,17 @@
 ## Démarrage rapide
 
 ```bash
-cd Database
-make start      # Démarrer PostgreSQL
-make connect    # Se connecter à la database
-make stop       # Arrêter PostgreSQL
+# Depuis la racine du projet
+make start      # Démarrer PostgreSQL + n8n
+make stop       # Arrêter tous les services
+make status     # Voir l'état des services
 ```
 
 ---
 
 ## Informations de connexion
+
+### Depuis l'hôte (Discord Bot, psql, etc.)
 
 | Paramètre | Valeur |
 |-----------|--------|
@@ -21,10 +23,21 @@ make stop       # Arrêter PostgreSQL
 | **Username** | `postgres` |
 | **Password** | `postgres` |
 
-### String de connexion
 ```
 postgresql://postgres:postgres@localhost:5432/clothify
 ```
+
+### Depuis n8n (réseau Docker interne)
+
+| Paramètre | Valeur |
+|-----------|--------|
+| **Host** | `postgres` |
+| **Port** | `5432` |
+| **Database** | `clothify` |
+| **Username** | `postgres` |
+| **Password** | `postgres` |
+
+> **Note :** Dans n8n, utiliser `postgres` comme host car les services sont dans le même réseau Docker.
 
 ---
 
@@ -50,44 +63,35 @@ postgresql://postgres:postgres@localhost:5432/clothify
 
 ## Commandes Makefile
 
-### Commandes principales
+Toutes les commandes s'exécutent depuis la **racine du projet** :
+
+### Services Docker
 
 | Commande | Description |
 |----------|-------------|
-| `make start` | Démarrer PostgreSQL |
-| `make stop` | Arrêter PostgreSQL |
-| `make restart` | Redémarrer PostgreSQL |
+| `make start` | Démarrer PostgreSQL + n8n |
+| `make stop` | Arrêter tous les services |
+| `make restart` | Redémarrer les services |
 | `make status` | Voir l'état des services |
-| `make connect` | Se connecter via psql |
-| `make logs` | Voir les logs |
-| `make help` | Afficher toutes les commandes |
+| `make logs` | Voir les logs (tous les services) |
 
-### Outils
+### Discord Bot
 
 | Commande | Description |
 |----------|-------------|
-| `make launch-azure` | Lancer Azure Data Studio |
-| `make stop-azure` | Arrêter Azure Data Studio |
-| `make chartdb-start` | Démarrer ChartDB (http://localhost:5000) |
-| `make chartdb-stop` | Arrêter ChartDB |
-
-### Maintenance
-
-| Commande | Description |
-|----------|-------------|
-| `make down` | Supprimer les conteneurs (garde les données) |
-| `make clean` | **DANGER** - Tout supprimer (conteneurs + données) |
+| `make bot` | Lancer le bot Discord |
+| `make setup` | Installer les dépendances |
 
 ---
 
 ## Connexion via psql
 
 ```bash
-# Via Makefile
-make connect
-
-# Ou directement
+# Directement
 psql -h localhost -U postgres -d clothify
+
+# Ou via Docker
+docker exec -it clothify_postgres psql -U postgres -d clothify
 ```
 
 ### Commandes psql utiles
@@ -107,15 +111,18 @@ psql -h localhost -U postgres -d clothify
 ## Structure des fichiers
 
 ```
-Database/
+Clothify/
 ├── .env                      # Variables d'environnement
-├── docker-compose.yml        # Configuration Docker
-├── Makefile                  # Commandes
-├── GUIDE_ACCES.md           # Ce fichier
-├── Shema.md                  # Schéma DBML original
-└── scripts/
-    └── init/
-        └── 01-schema.sql     # Script d'initialisation
+├── docker-compose.yml        # PostgreSQL + n8n (unifié)
+├── Makefile                  # Commandes principales
+├── bot/                      # Code du bot Discord
+└── Database/
+    ├── GUIDE_ACCES.md        # Ce fichier
+    ├── Shema.md              # Schéma DBML original
+    └── scripts/
+        └── init/
+            ├── 01-schema.sql         # Schéma initial
+            └── 02-add-channel-id.sql # Migration channel_id
 ```
 
 ---
@@ -125,7 +132,17 @@ Database/
 Si tu dois tout recréer :
 
 ```bash
-cd Database
-make clean      # Tape "yes" pour confirmer
-make start      # Recrée tout depuis zéro
+# Depuis la racine du projet
+make stop                           # Arrêter les services
+docker volume rm clothify_postgres-data  # Supprimer les données
+make start                          # Recréer depuis zéro
 ```
+
+---
+
+## Services disponibles
+
+| Service | URL | Description |
+|---------|-----|-------------|
+| PostgreSQL | `localhost:5432` | Base de données |
+| n8n | `http://localhost:5678` | Workflow automation |

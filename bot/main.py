@@ -64,7 +64,7 @@ def create_bot() -> discord.Client:
             logger.error("Bot will continue but database operations will fail")
 
         # Start background polling task
-        start_polling_task(client)
+        start_polling_task()
 
         logger.info("Clothify Bot is ready!")
 

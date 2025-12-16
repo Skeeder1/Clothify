@@ -2,6 +2,8 @@
 
 import logging
 import json
+import random
+import string
 from uuid import UUID
 from typing import Optional
 import asyncpg
@@ -90,7 +92,6 @@ async def get_or_create_user(discord_id: str, discord_name: str) -> UUID:
 async def create_job(
     user_id: UUID,
     discord_message_id: str,
-    discord_channel_id: str,
     input_file_paths: list[str],
     product_name: str,
     garment: str,
@@ -103,7 +104,6 @@ async def create_job(
     Args:
         user_id: User UUID
         discord_message_id: Discord message ID
-        discord_channel_id: Discord channel ID
         input_file_paths: List of input file paths
         product_name: Product name extracted from filename
         garment: Garment type
@@ -121,13 +121,13 @@ async def create_job(
         row = await conn.fetchrow(
             """
             INSERT INTO jobs (
-                user_id, discord_message_id, discord_channel_id,
+                user_id, discord_message_id,
                 input_file_paths, product_name, garment, size, custom_prompt, status
             )
-            VALUES ($1, $2, $3, $4, $5, $6::garment_type, $7::size_code, $8, 'pending')
+            VALUES ($1, $2, $3, $4, $5::garment_type, $6::size_code, $7, 'pending')
             RETURNING id
             """,
-            user_id, discord_message_id, discord_channel_id,
+            user_id, discord_message_id,
             input_paths_str, product_name, garment, size, custom_prompt
         )
 
@@ -161,7 +161,7 @@ async def get_done_jobs() -> list[asyncpg.Record]:
     async with pool.acquire() as conn:
         rows = await conn.fetch(
             """
-            SELECT id, user_id, discord_message_id, discord_channel_id,
+            SELECT id, user_id, discord_message_id,
                    input_file_paths, output_file_path, product_name,
                    garment, size, custom_prompt, created_at, completed_at
             FROM jobs
@@ -230,3 +230,44 @@ async def get_user_stats(discord_id: str) -> Optional[dict]:
         if row:
             return dict(row)
         return None
+
+
+async def product_name_exists(product_name: str) -> bool:
+    """
+    Check if a product name already exists in the database.
+
+    Args:
+        product_name: Product name to check
+
+    Returns:
+        True if exists, False otherwise
+    """
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT 1 FROM jobs WHERE product_name = $1 LIMIT 1",
+            product_name
+        )
+        return row is not None
+
+
+async def generate_unique_product_id() -> str:
+    """
+    Generate a unique product ID (6 characters, alphanumeric).
+
+    The ID is checked against the database to ensure uniqueness.
+
+    Returns:
+        Unique product ID (e.g., 'ABC123')
+    """
+    max_attempts = 100
+    for _ in range(max_attempts):
+        # Generate 6 character ID (uppercase letters + digits)
+        product_id = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+        # Check if it exists
+        if not await product_name_exists(product_id):
+            return product_id
+
+    # Fallback: use longer ID if all attempts fail
+    return ''.join(random.choices(string.ascii_uppercase + string.digits, k=10))

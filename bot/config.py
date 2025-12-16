@@ -12,7 +12,7 @@ class Config:
     """Bot configuration loaded from environment variables."""
 
     # Discord
-    DISCORD_BOT_TOKEN: str = os.getenv("DISCORD_BOT_TOKEN", "")
+    DISCORD_BOT_TOKEN: str = os.getenv("DISCORD_TOKEN", "")
 
     # Database
     DATABASE_URL: str = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/clothify")
