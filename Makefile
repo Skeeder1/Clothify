@@ -1,30 +1,31 @@
-.PHONY: help start stop logs build start-n8n stop-n8n
+.PHONY: help setup process process-all clean
 
 help:
-	@echo "make start      - Start all services"
-	@echo "make stop       - Stop all services"
-	@echo "make start-n8n  - Start n8n only"
-	@echo "make stop-n8n   - Stop n8n only"
-	@echo "make logs       - View logs"
-	@echo "make build      - Rebuild images"
+	@echo "Clothify - Image Processor"
+	@echo ""
+	@echo "Setup:"
+	@echo "  make setup        - Create venv and install dependencies"
+	@echo ""
+	@echo "Usage:"
+	@echo "  make process      - Process 1 random image"
+	@echo "  make process-all  - Process all images"
+	@echo ""
+	@echo "Cleanup:"
+	@echo "  make clean        - Remove virtual environment"
 
-start:
-	docker compose up -d
+setup:
+	python3 -m venv .venv
+	.venv/bin/pip install --upgrade pip
+	.venv/bin/pip install -r image-processor/requirements.txt
+	@echo ""
+	@echo "Setup complete! Run 'make process' to start."
 
-stop:
-	docker compose down
+process:
+	.venv/bin/python image-processor/main.py
 
-start-n8n:
-	docker compose up -d postgres n8n
+process-all:
+	.venv/bin/python image-processor/main.py --all
 
-stop-n8n:
-	docker compose stop n8n postgres
-
-logs:
-	docker compose logs -f
-
-build:
-	docker compose build --no-cache
-
-backup:
-	docker compose exec postgres pg_dump -U n8n n8n > backup_$$(date +%Y%m%d).sql
+clean:
+	rm -rf .venv
+	@echo "Virtual environment removed."

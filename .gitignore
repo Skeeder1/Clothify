@@ -19,7 +19,11 @@ venv/
 .vscode/
 .idea/
 .DS_Store
+CLAUDE.md
 
 # Logs & Backups
 *.log
-*.sql
+
+# Database (keep schema, ignore dumps)
+Database/.env
+!Database/scripts/init/*.sql
