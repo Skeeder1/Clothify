@@ -1,0 +1,70 @@
+# ===========================================
+# Clothify - Docker Build Exclusions
+# ===========================================
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+.Python
+pip-log.txt
+*.egg-info/
+.eggs/
+
+# Environment (secrets)
+.env
+.env.*
+!.env.example
+!.env.coolify.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation (not needed in container)
+*.md
+docs/
+CLAUDE.md
+
+# Docker (avoid recursive copy)
+Dockerfile*
+.dockerignore
+
+# Local data (volumes will be mounted)
+images/input/*
+images/output/*
+!images/input/.gitkeep
+!images/output/.gitkeep
+n8n-data/
+postgres-data/
+local-files/
+
+# Tests
+tests/
+pytest.ini
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Database scripts (not needed in bot container)
+Database/
+
+# n8n workflows (managed separately)
+n8n/
+
+# Misc
+*.log
+*.bak
+Makefile
+docker-compose*.yml

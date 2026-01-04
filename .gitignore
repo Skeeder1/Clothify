@@ -2,6 +2,7 @@
 .env
 .env.*
 !.env.example
+!.env.coolify.example
 
 # Data
 n8n-data/
@@ -27,3 +28,7 @@ CLAUDE.md
 # Database (keep schema, ignore dumps)
 Database/.env
 !Database/scripts/init/*.sql
+
+# n8n workflows (keep exported JSON, ignore temp files)
+n8n/workflows/*.tmp
+n8n/workflows/*.bak
