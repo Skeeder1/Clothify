@@ -18,9 +18,8 @@ from .handlers.tasks import set_discord_client
 from .utils.files import ensure_directories_exist
 
 # Configure logging
-LOG_LEVEL = config.get("LOG_LEVEL", "INFO").upper()
 logging.basicConfig(
-    level=getattr(logging, LOG_LEVEL, logging.INFO),
+    level=getattr(logging, config.LOG_LEVEL, logging.INFO),
     format="%(asctime)s [%(levelname)s] %(name)s: %(message)s",
     datefmt="%Y-%m-%d %H:%M:%S",
     handlers=[

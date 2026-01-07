@@ -55,6 +55,7 @@ class Config:
     WATCH_INTERVAL_SECONDS: int = _yaml_config['bot']['watch_interval_seconds']
     DISCORD_CHANNEL_NAME: str = os.getenv("DISCORD_CHANNEL_NAME", "bot_clothify")
     SUPPORTED_EXTENSIONS: list[str] = _yaml_config['bot']['supported_extensions']
+    LOG_LEVEL: str = os.getenv("LOG_LEVEL", "INFO").upper()
     
     # Discord UI
     VIEW_TIMEOUT: int = _yaml_config['discord']['view_timeout']
