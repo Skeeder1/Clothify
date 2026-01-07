@@ -124,8 +124,8 @@ class ConnectivityTester:
     async def test_volume_access(self) -> bool:
         """Test shared volume read/write access."""
         try:
-            input_dir = os.getenv("SHARED_VOLUME_PATH", "/files") + "/input_image"
-            output_dir = os.getenv("SHARED_VOLUME_PATH", "/files") + "/output_image"
+            input_dir = os.getenv("SHARED_VOLUME_PATH", "/clothify_shared") + "/input_image"
+            output_dir = os.getenv("SHARED_VOLUME_PATH", "/clothify_shared") + "/output_image"
             
             # Test read access
             if not os.path.exists(input_dir):

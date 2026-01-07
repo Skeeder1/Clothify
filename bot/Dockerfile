@@ -40,8 +40,8 @@ COPY bot/tests/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
 
 # Create directories for mounted volumes
-RUN mkdir -p /files/input_image /files/output_image && \
-    chown -R clothify:clothify /app /files
+RUN mkdir -p /clothify_shared/input_image /clothify_shared/output_image && \
+    chown -R clothify:clothify /app /clothify_shared
 
 # Switch to non-root user
 USER clothify

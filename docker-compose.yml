@@ -44,7 +44,7 @@ services:
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
     volumes:
       - n8n-data:/home/node/.n8n
-      - clothify_shared:/files
+      - clothify_shared:/clothify_shared
     depends_on:
       postgres:
         condition: service_healthy
@@ -65,9 +65,9 @@ services:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-clothify}
       - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
       - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
-      - SHARED_VOLUME_PATH=/files
+      - SHARED_VOLUME_PATH=/clothify_shared
     volumes:
-      - clothify_shared:/files
+      - clothify_shared:/clothify_shared
     depends_on:
       postgres:
         condition: service_healthy

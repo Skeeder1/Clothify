@@ -39,7 +39,7 @@ class Config:
     # PATHS (from .env - environment-specific)
     # ==========================================
     
-    SHARED_VOLUME_PATH: str = os.getenv("SHARED_VOLUME_PATH", "/files")
+    SHARED_VOLUME_PATH: str = os.getenv("SHARED_VOLUME_PATH", "/clothify_shared")
     
     # Derived path constants
     INPUT_DIR: str = f"{SHARED_VOLUME_PATH}/input_image"
