@@ -1,4 +1,4 @@
-.PHONY: help setup setup-bot bot start_bot start stop restart logs status process process-all clean
+.PHONY: help setup setup-bot bot start_bot start stop restart logs status process process-all clean debug-config
 
 help:
 	@echo "Clothify - Image Processor & Discord Bot"
@@ -21,6 +21,7 @@ help:
 	@echo "Discord Bot (Local Development):"
 	@echo "  make start_bot_local - Start bot on host (without Docker)"
 	@echo "  make bot             - Run bot directly (for debugging)"
+	@echo "  make debug-config    - Show configuration and paths (debugging)"
 	@echo ""
 	@echo "Cleanup:"
 	@echo "  make clean        - Remove virtual environment"
@@ -82,6 +83,10 @@ start_bot_local:
 	@echo "Press Ctrl+C to stop"
 	@echo ""
 	@set -a && source .env && set +a && .venv/bin/python -m bot.main
+
+debug-config:
+	@echo "Running configuration debug script..."
+	@set -a && source .env && set +a && .venv/bin/python bot/debug_config.py
 
 # Image processing (legacy)
 process:

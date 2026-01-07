@@ -36,23 +36,34 @@ async def save_attachment(attachment: discord.Attachment, directory: str) -> str
     Raises:
         IOError: If file cannot be saved
     """
+    logger.debug(f"🔍 save_attachment called with directory: {directory}")
+    logger.debug(f"🔍 Attachment filename: {attachment.filename}")
+    
     dir_path = Path(directory)
+    logger.debug(f"🔍 Resolved dir_path: {dir_path} (absolute: {dir_path.absolute()})")
+    logger.debug(f"🔍 dir_path exists: {dir_path.exists()}")
+    
     dir_path.mkdir(parents=True, exist_ok=True)
+    logger.debug(f"✅ Directory ensured: {dir_path}")
 
     # Use the original filename
     filename = attachment.filename
     file_path = dir_path / filename
+    logger.debug(f"🔍 Initial file_path: {file_path}")
 
     # Handle duplicate filenames by adding a counter
     counter = 1
     original_stem = file_path.stem
     while file_path.exists():
+        logger.debug(f"⚠️ File exists, trying counter {counter}")
         file_path = dir_path / f"{original_stem}_{counter}{file_path.suffix}"
         counter += 1
 
     # Save the file
+    logger.debug(f"📝 About to save to: {file_path}")
     await attachment.save(file_path)
-    logger.info(f"Saved attachment: {file_path}")
+    logger.info(f"✅ Saved attachment: {file_path}")
+    logger.debug(f"🔍 File exists after save: {file_path.exists()}")
 
     return str(file_path)
 

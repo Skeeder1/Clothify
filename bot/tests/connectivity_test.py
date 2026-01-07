@@ -4,11 +4,16 @@ import asyncio
 import os
 import sys
 from datetime import datetime
+from pathlib import Path
+
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent.parent))
 
 try:
     import asyncpg
     import discord
     import aiohttp
+    from bot.config import Config
 except ImportError as e:
     print(f"❌ Missing dependency: {e}")
     sys.exit(1)
@@ -124,8 +129,9 @@ class ConnectivityTester:
     async def test_volume_access(self) -> bool:
         """Test shared volume read/write access."""
         try:
-            input_dir = os.getenv("SHARED_VOLUME_PATH", "/files") + "/input_image"
-            output_dir = os.getenv("SHARED_VOLUME_PATH", "/files") + "/output_image"
+            # Use Config constants (derived from SHARED_VOLUME_PATH)
+            input_dir = Config.INPUT_DIR
+            output_dir = Config.OUTPUT_DIR
             
             # Test read access
             if not os.path.exists(input_dir):

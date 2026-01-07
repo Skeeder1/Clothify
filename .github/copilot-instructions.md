@@ -229,3 +229,12 @@ host_path = db_path.replace("/files/", "./images/")  # Fragile!
 ---
 
 **Reference:** See `docs/SYSTEM_ARCHITECTURE.md` for complete system documentation, data flow diagrams, deployment procedures, and troubleshooting guides.
+
+
+
+# Regle importantes
+
+- tu à interdiction de creer des fichier temporaire de debug ou de test ou de documentation destiné à l'utilisateur pour une modif ponctuelle dans le code. tu dois absolument les ecrire dans bot/tempo.
+- pour les tests durable et permanent ( a faire regulierement ) tu dois les faires dans le fichier bot/tests 
+- pour les logs de debugg, lorsque tu en met supprime les une fois le probleme corrigé, si tu lis le code et que tu vois des logs de debug inutile, supprime les.
+- pour le code, lorsque tu ecrit ou test des choses qui ne fonctionne pas, supprime les avant de tester autre choses, pour ne pas polluer le code. # tu dois toujours respecter le style de code et les conventions déja en place dans le projet.
