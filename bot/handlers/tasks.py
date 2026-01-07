@@ -9,13 +9,16 @@ from uuid import UUID
 import discord
 
 from ..database import get_job_output, update_job_status
-from ..utils.files import file_exists, docker_to_host_path
+from ..utils.files import file_exists
 
 logger = logging.getLogger(__name__)
 
-# Configuration
-WATCH_TIMEOUT = 120  # 2 minutes max
-WATCH_INTERVAL = 5   # Poll every 5 seconds
+from ..config import config
+
+# Configuration (loaded from environment variables)
+WATCH_TIMEOUT = config.WATCH_TIMEOUT_SECONDS
+WATCH_INTERVAL = config.WATCH_INTERVAL_SECONDS
+
 
 # Discord client reference (set by main.py)
 _discord_client: Optional[discord.Client] = None
@@ -79,18 +82,17 @@ async def _watch_job(
             output_path = await get_job_output(job_id)
 
             if output_path:
-                # Convert Docker path to host path
-                host_path = docker_to_host_path(output_path)
-                logger.info(f"Job {job_id}: output found at {host_path}")
+                # Use path directly (no conversion needed - shared volume)
+                logger.info(f"Job {job_id}: output found at {output_path}")
 
-                if file_exists(host_path):
+                if file_exists(output_path):
                     # Send image to Discord
-                    await _send_image_reply(discord_message, host_path, product_name)
+                    await _send_image_reply(discord_message, output_path, product_name)
                     await update_job_status(job_id, "sent", "Image sent to Discord")
                     logger.info(f"Job {job_id} completed and sent to Discord")
                     return
                 else:
-                    logger.warning(f"Job {job_id}: file not found on disk yet: {host_path}")
+                    logger.warning(f"Job {job_id}: file not found on disk yet: {output_path}")
 
         except Exception as e:
             logger.error(f"Error watching job {job_id}: {e}")

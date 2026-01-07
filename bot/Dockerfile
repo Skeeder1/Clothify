@@ -33,7 +33,7 @@ RUN pip install --no-cache /wheels/* && rm -rf /wheels
 COPY bot/ ./bot/
 
 # Create directories for mounted volumes
-RUN mkdir -p /files/input /files/output && \
+RUN mkdir -p /files/input_image /files/output_image && \
     chown -R clothify:clothify /app /files
 
 # Switch to non-root user

@@ -29,7 +29,7 @@ def setup_message_handler(client: discord.Client) -> None:
             return
 
         # Only listen in the bot_clothify channel
-        if message.channel.name != "bot_clothify":
+        if message.channel.name != config.DISCORD_CHANNEL_NAME:
             return
 
         # Handle commands
@@ -102,7 +102,7 @@ async def handle_image_upload(message: discord.Message) -> None:
     saved_paths = []
     for attachment in valid_attachments:
         try:
-            file_path = await save_attachment(attachment, config.INPUT_IMAGES_PATH)
+            file_path = await save_attachment(attachment, config.INPUT_DIR)
             saved_paths.append(file_path)
             logger.info(f"Saved image: {file_path}")
         except Exception as e:

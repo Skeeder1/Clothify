@@ -1,34 +1,58 @@
-# Secrets
+# ===========================================
+# Clothify - .gitignore
+# ===========================================
+
+# Secrets & Environment
 .env
 .env.*
 !.env.example
 !.env.coolify.example
 
-# Data
+# Data & Volumes
 n8n-data/
 postgres-data/
 local-files/*
 !local-files/.gitkeep
+images/input/*
+images/output/*
+!images/input/.gitkeep
+!images/output/.gitkeep
 
 # Python
 __pycache__/
 *.py[cod]
+*.pyo
+*.pyd
+.Python
 venv/
 .venv/
+ENV/
+env/
+*.egg-info/
+dist/
+build/
 
-# IDE
+# IDE & Editors
 .vscode/
 .idea/
 .DS_Store
-CLAUDE.md
+*.swp
+*.swo
+*~
 
-# Logs & Backups
+# Logs & Temporary
 *.log
+*.tmp
+*.bak
+*.cache
 
-# Database (keep schema, ignore dumps)
+# Database
 Database/.env
-!Database/scripts/init/*.sql
+*.sql.gz
+*.dump
 
-# n8n workflows (keep exported JSON, ignore temp files)
-n8n/workflows/*.tmp
-n8n/workflows/*.bak
+# Archives & Backups
+docs/archives/
+
+# Keep SQL scripts
+!Database/scripts/**/*.sql

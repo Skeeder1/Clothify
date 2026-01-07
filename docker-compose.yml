@@ -44,8 +44,30 @@ services:
       - DB_POSTGRESDB_PASSWORD=${POSTGRES_PASSWORD:-postgres}
     volumes:
       - n8n-data:/home/node/.n8n
-      - ./images/input:/files/input
-      - ./images/output:/files/output
+      - clothify_shared:/files
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  # ===========================================
+  # Discord Bot (Python)
+  # ===========================================
+  bot:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    container_name: clothify_bot
+    restart: unless-stopped
+    environment:
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - DISCORD_CHANNEL_NAME=${DISCORD_CHANNEL_NAME:-bot_clothify}
+      - DISCORD_GUILD_ID=${DISCORD_GUILD_ID}
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@postgres:5432/${POSTGRES_DB:-clothify}
+      - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
+      - N8N_ENCRYPTION_KEY=${N8N_ENCRYPTION_KEY}
+      - SHARED_VOLUME_PATH=/files
+    volumes:
+      - clothify_shared:/files
     depends_on:
       postgres:
         condition: service_healthy
@@ -53,3 +75,4 @@ services:
 volumes:
   postgres-data:
   n8n-data:
+  clothify_shared:

@@ -1,0 +1,85 @@
+# ===========================================
+# Clothify - Configuration Universelle
+# ===========================================
+# Ce fichier contient toutes les configurations UNIVERSELLES
+# (identiques en LOCAL et PRODUCTION)
+#
+# Les variables spécifiques à l'environnement (secrets, chemins, URLs)
+# restent dans le fichier .env
+
+# ===========================================
+# BOT BEHAVIOR
+# ===========================================
+bot:
+  # Intervalle de polling pour vérifier les jobs terminés (en secondes)
+  poll_interval_seconds: 5
+  
+  # Timeout maximum pour attendre la fin d'un job (en secondes)
+  # Si un job dépasse ce délai, il sera marqué en erreur
+  watch_timeout_seconds: 120
+  
+  # Intervalle entre chaque vérification de statut de job (en secondes)
+  watch_interval_seconds: 5
+  
+  # Extensions d'images supportées
+  supported_extensions:
+    - ".jpg"
+    - ".jpeg"
+    - ".png"
+    - ".webp"
+
+# ===========================================
+# DATABASE SCHEMA
+# ===========================================
+database:
+  # Types de vêtements valides (doit correspondre à l'enum PostgreSQL)
+  valid_garments:
+    - "echarpe"
+    - "pull"
+    - "tshirt"
+    - "chemise"
+    - "veste"
+    - "manteau"
+    - "pantalon"
+    - "jean"
+    - "short"
+    - "jupe"
+    - "robe"
+    - "bonnet"
+    - "casquette"
+    - "sac"
+    - "other"
+  
+  # Tailles valides (doit correspondre à l'enum PostgreSQL)
+  valid_sizes:
+    - "1"  # Petit
+    - "2"  # Standard
+    - "3"  # Moyen
+    - "4"  # Grand
+
+# ===========================================
+# N8N CONFIGURATION
+# ===========================================
+n8n:
+  # Timezone pour n8n (identique en LOCAL et PRODUCTION)
+  timezone: "Europe/Paris"
+
+# ===========================================
+# DISCORD UI
+# ===========================================
+discord:
+  # Timeout pour les vues interactives (Select/Button) en secondes
+  view_timeout: 300
+  
+  # Durée de conservation des sessions d'upload en attente (secondes)
+  pending_upload_ttl: 300
+
+# ===========================================
+# JOB SETTINGS
+# ===========================================
+jobs:
+  # Nombre maximum de tentatives avant d'abandonner un job
+  max_attempts: 3
+  
+  # Durée après laquelle un job en 'processing' est considéré comme bloqué (minutes)
+  stale_timeout_minutes: 5

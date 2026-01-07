@@ -13,8 +13,8 @@ logger = logging.getLogger(__name__)
 
 def ensure_directories_exist() -> None:
     """Create input and output directories if they don't exist."""
-    input_path = Path(config.INPUT_IMAGES_PATH)
-    output_path = Path(config.OUTPUT_IMAGES_PATH)
+    input_path = Path(config.INPUT_DIR)
+    output_path = Path(config.OUTPUT_DIR)
 
     input_path.mkdir(parents=True, exist_ok=True)
     output_path.mkdir(parents=True, exist_ok=True)
@@ -68,38 +68,13 @@ def get_output_file_path(input_filename: str) -> str:
         Full path to the expected output file
     """
     # Output files have the same name but in the output directory
-    output_path = Path(config.OUTPUT_IMAGES_PATH) / input_filename
+    output_path = Path(config.OUTPUT_DIR) / input_filename
     return str(output_path)
 
 
 def file_exists(file_path: str) -> bool:
     """Check if a file exists."""
     return Path(file_path).exists()
-
-
-def docker_to_host_path(docker_path: str) -> str:
-    """
-    Convert a Docker container path to host path.
-
-    Docker mapping (from docker-compose.yml):
-        ./images/input  → /files/input   (in n8n)
-        ./images/output → /files/output  (in n8n)
-
-    Args:
-        docker_path: Path as seen from Docker container
-
-    Returns:
-        Path as seen from host
-    """
-    if not docker_path:
-        return docker_path
-
-    if docker_path.startswith("/files/input/"):
-        return docker_path.replace("/files/input/", "images/input/")
-    if docker_path.startswith("/files/output/"):
-        return docker_path.replace("/files/output/", "images/output/")
-
-    return docker_path
 
 
 def get_file_size(file_path: str) -> int:

@@ -7,20 +7,20 @@ help:
 	@echo "  make setup        - Create venv and install all dependencies"
 	@echo "  make setup-bot    - Install bot dependencies only"
 	@echo ""
-	@echo "Docker Services (PostgreSQL + n8n):"
-	@echo "  make start        - Start all Docker services"
+	@echo "Docker Services (PostgreSQL + n8n + Bot):"
+	@echo "  make start        - Start all Docker services (including bot)"
 	@echo "  make stop         - Stop all Docker services"
 	@echo "  make restart      - Restart all Docker services"
+	@echo "  make rebuild      - Rebuild and restart all services"
+	@echo "  make rebuild-bot  - Rebuild and restart bot only"
 	@echo "  make logs         - View Docker logs (all services)"
+	@echo "  make logs-bot     - View bot logs only"
+	@echo "  make logs-n8n     - View n8n logs only"
 	@echo "  make status       - Show Docker services status"
 	@echo ""
-	@echo "Discord Bot:"
-	@echo "  make start_bot    - Start bot with .env (foreground, logs visible)"
-	@echo "  make bot          - Run the Discord bot (without .env loading)"
-	@echo ""
-	@echo "Image Processing:"
-	@echo "  make process      - Process 1 random image"
-	@echo "  make process-all  - Process all images"
+	@echo "Discord Bot (Local Development):"
+	@echo "  make start_bot_local - Start bot on host (without Docker)"
+	@echo "  make bot             - Run bot directly (for debugging)"
 	@echo ""
 	@echo "Cleanup:"
 	@echo "  make clean        - Remove virtual environment"
@@ -43,6 +43,7 @@ start:
 	@echo "Services started:"
 	@echo "  - PostgreSQL: localhost:5432"
 	@echo "  - n8n:        http://localhost:5678"
+	@echo "  - Bot:        Running in container"
 
 stop:
 	docker compose down
@@ -55,15 +56,29 @@ restart:
 logs:
 	docker compose logs -f
 
+logs-bot:
+	docker compose logs -f bot
+
+logs-n8n:
+	docker compose logs -f n8n
+
 status:
 	docker compose ps
 
-# Discord bot
+rebuild:
+	docker compose up -d --build
+	@echo "Services rebuilt and restarted."
+
+rebuild-bot:
+	docker compose up -d --build bot
+	@echo "Bot service rebuilt and restarted."
+
+# Discord bot (local development - without Docker)
 bot:
 	.venv/bin/python -m bot.main
 
-start_bot:
-	@echo "Starting Clothify Discord Bot..."
+start_bot_local:
+	@echo "Starting Clothify Discord Bot (LOCAL mode)..."
 	@echo "Press Ctrl+C to stop"
 	@echo ""
 	@set -a && source .env && set +a && .venv/bin/python -m bot.main
