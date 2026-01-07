@@ -32,6 +32,9 @@ RUN pip install --no-cache /wheels/* && rm -rf /wheels
 # Copy application code
 COPY bot/ ./bot/
 
+# Copy config.yaml to root directory
+COPY config.yaml /app/config.yaml
+
 # Copy entrypoint script from tests directory and make it executable
 COPY bot/tests/entrypoint.sh /app/entrypoint.sh
 RUN chmod +x /app/entrypoint.sh
