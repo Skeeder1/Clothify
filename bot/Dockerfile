@@ -32,6 +32,10 @@ RUN pip install --no-cache /wheels/* && rm -rf /wheels
 # Copy application code
 COPY bot/ ./bot/
 
+# Copy entrypoint script from tests directory and make it executable
+COPY bot/tests/entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
 # Create directories for mounted volumes
 RUN mkdir -p /files/input_image /files/output_image && \
     chown -R clothify:clothify /app /files
@@ -47,5 +51,5 @@ ENV PYTHONDONTWRITEBYTECODE=1
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD python -c "import sys; sys.exit(0)"
 
-# Run the bot
-CMD ["python", "-m", "bot.main"]
+# Run connectivity tests before starting the bot
+ENTRYPOINT ["/app/entrypoint.sh"]
