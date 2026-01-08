@@ -110,7 +110,7 @@ class CustomGarmentModal(discord.ui.Modal, title="Spécifier le vêtement"):
             )
             return
 
-        # Store custom garment
+        # Store custom garment directly (garment is now TEXT, not ENUM)
         upload.garment = custom_garment
         set_pending_upload(user_id, upload)
 
@@ -315,7 +315,7 @@ class SizeSelectView(discord.ui.View):
             # Find labels for display
             garment_label = next(
                 (label for _, label, value in GARMENT_OPTIONS if value == upload.garment),
-                upload.garment
+                upload.garment  # Use custom text if not in predefined list
             )
             size_labels = {"1": "Petit", "2": "Standard", "3": "Moyen", "4": "Grand"}
 

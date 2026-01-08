@@ -124,7 +124,7 @@ async def create_job(
                 user_id, discord_message_id,
                 input_file_paths, product_name, garment, size, custom_prompt, status
             )
-            VALUES ($1, $2, $3, $4, $5::garment_type, $6::size_code, $7, 'pending')
+            VALUES ($1, $2, $3, $4, $5, $6::size_code, $7, 'pending')
             RETURNING id
             """,
             user_id, discord_message_id,
