@@ -319,8 +319,8 @@ class SizeSelectView(discord.ui.View):
             )
             size_labels = {"1": "Petit", "2": "Standard", "3": "Moyen", "4": "Grand"}
 
-            # Send ephemeral confirmation and reply to original message
-            await interaction.response.send_message(
+            # Edit the ephemeral message to remove buttons and show confirmation
+            await interaction.response.edit_message(
                 content=(
                     f"✅ **Job créé avec succès !**\n\n"
                     f"**ID:** `{product_id}`\n"
@@ -328,7 +328,7 @@ class SizeSelectView(discord.ui.View):
                     f"**Taille:** {size_labels.get(size, size)}\n\n"
                     f"⏳ Traitement en cours... Vous recevrez l'image directement sur le message original."
                 ),
-                ephemeral=True
+                view=None  # Remove buttons
             )
 
             logger.info(f"Created job {job_id} for user {user_id} - {product_id}")
