@@ -79,6 +79,61 @@ GARMENT_OPTIONS = [
 
 
 # ===========================================
+# Custom Garment Modal
+# ===========================================
+
+class CustomGarmentModal(discord.ui.Modal, title="Spécifier le vêtement"):
+    """Modal for entering custom garment name."""
+
+    garment_name = discord.ui.TextInput(
+        label="Nom du vêtement",
+        placeholder="Ex: Casque, Gants, Chaussettes...",
+        max_length=30,
+        required=True
+    )
+
+    def __init__(self, user_id: str):
+        super().__init__()
+        self.user_id = user_id
+
+    async def on_submit(self, interaction: discord.Interaction):
+        """Handle modal submission."""
+        user_id = str(interaction.user.id)
+        custom_garment = self.garment_name.value.strip()
+
+        # Get pending upload
+        upload = get_pending_upload(user_id)
+        if not upload:
+            await interaction.response.send_message(
+                "Session expirée. Veuillez renvoyer votre image.",
+                ephemeral=True
+            )
+            return
+
+        # Store custom garment
+        upload.garment = custom_garment
+        set_pending_upload(user_id, upload)
+
+        logger.info(f"User {user_id} entered custom garment: {custom_garment}")
+
+        # Delete the original selection message to keep chat clean
+        try:
+            if upload.selection_message:
+                await upload.selection_message.delete()
+        except discord.errors.NotFound:
+            pass
+        except Exception as e:
+            logger.warning(f"Could not delete selection message: {e}")
+
+        # Send size selection
+        await interaction.response.send_message(
+            content=f"**Vêtement:** {custom_garment}\n\n📏 **Quelle taille de visuel ?**",
+            view=SizeSelectView(user_id),
+            ephemeral=True
+        )
+
+
+# ===========================================
 # Garment Selection View
 # ===========================================
 
@@ -123,7 +178,13 @@ class GarmentSelect(discord.ui.Select):
             )
             return
 
-        # Update garment        # Update garment
+        # If "other" is selected, show modal for custom input
+        if selected_garment == "other":
+            modal = CustomGarmentModal(user_id)
+            await interaction.response.send_modal(modal)
+            return
+
+        # Update garment
         upload.garment = selected_garment
         set_pending_upload(user_id, upload)
 
