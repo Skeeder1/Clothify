@@ -130,9 +130,12 @@ async def handle_image_upload(message: discord.Message) -> None:
 
     # Send garment selection view
     view = GarmentSelectView()
-    await message.reply(
+    selection_msg = await message.reply(
         "🧥 **Quel type de vêtement ?**\n\nSélectionnez dans le menu ci-dessous:",
         view=view
     )
+    # Store the selection message to delete it later
+    pending.selection_message = selection_msg
+    set_pending_upload(user_id, pending)
 
     logger.info(f"Started interactive flow for user {message.author} with {len(saved_paths)} image(s)")

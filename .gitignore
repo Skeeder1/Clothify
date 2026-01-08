@@ -45,6 +45,7 @@ build/
 *.tmp
 *.bak
 *.cache
+bot/tempo/
 
 # Database
 Database/.env

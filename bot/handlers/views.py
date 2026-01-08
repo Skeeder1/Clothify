@@ -26,6 +26,7 @@ class PendingUpload:
     user_name: str
     garment: Optional[str] = None
     custom_prompt: Optional[str] = None
+    selection_message: Optional[discord.Message] = None
     created_at: datetime = field(default_factory=datetime.now)
 
 
@@ -109,12 +110,20 @@ class GarmentSelect(discord.ui.Select):
         upload = get_pending_upload(user_id)
         if not upload:
             await interaction.response.send_message(
-                "Session expirée. Veuillez renvoyer votre image.",
+                "Cette sélection n'est pas pour vous, ou votre session a expiré.",
                 ephemeral=True
             )
             return
 
-        # Update garment
+        # Verify it's the same user who uploaded
+        if user_id != upload.user_id:
+            await interaction.response.send_message(
+                "Cette sélection n'est pas pour vous.",
+                ephemeral=True
+            )
+            return
+
+        # Update garment        # Update garment
         upload.garment = selected_garment
         set_pending_upload(user_id, upload)
 
@@ -126,10 +135,20 @@ class GarmentSelect(discord.ui.Select):
 
         logger.info(f"User {user_id} selected garment: {selected_garment}")
 
-        # Show size selection
-        await interaction.response.edit_message(
+        # Delete the original selection message to keep chat clean
+        try:
+            if upload.selection_message:
+                await upload.selection_message.delete()
+        except discord.errors.NotFound:
+            pass  # Message already deleted
+        except Exception as e:
+            logger.warning(f"Could not delete selection message: {e}")
+
+        # Send size selection as ephemeral message
+        await interaction.response.send_message(
             content=f"**Vêtement:** {garment_label}\n\n📏 **Quelle taille de visuel ?**",
-            view=SizeSelectView(user_id)
+            view=SizeSelectView(user_id),
+            ephemeral=True
         )
 
 
@@ -239,16 +258,16 @@ class SizeSelectView(discord.ui.View):
             )
             size_labels = {"1": "Petit", "2": "Standard", "3": "Moyen", "4": "Grand"}
 
-            # Update message with confirmation
-            await interaction.response.edit_message(
+            # Send ephemeral confirmation and reply to original message
+            await interaction.response.send_message(
                 content=(
                     f"✅ **Job créé avec succès !**\n\n"
                     f"**ID:** `{product_id}`\n"
                     f"**Vêtement:** {garment_label}\n"
                     f"**Taille:** {size_labels.get(size, size)}\n\n"
-                    f"⏳ Traitement en cours..."
+                    f"⏳ Traitement en cours... Vous recevrez l'image directement sur le message original."
                 ),
-                view=None  # Remove buttons
+                ephemeral=True
             )
 
             logger.info(f"Created job {job_id} for user {user_id} - {product_id}")
