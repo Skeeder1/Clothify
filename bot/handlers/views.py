@@ -25,6 +25,7 @@ class PendingUpload:
     user_id: str
     user_name: str
     garment: Optional[str] = None
+    genre: Optional[str] = None
     custom_prompt: Optional[str] = None
     selection_message: Optional[discord.Message] = None
     created_at: datetime = field(default_factory=datetime.now)
@@ -205,10 +206,10 @@ class GarmentSelect(discord.ui.Select):
         except Exception as e:
             logger.warning(f"Could not delete selection message: {e}")
 
-        # Send size selection as ephemeral message
+        # Send genre selection as ephemeral message
         await interaction.response.send_message(
-            content=f"**Vêtement:** {garment_label}\n\n📏 **Quelle taille de visuel ?**",
-            view=SizeSelectView(user_id),
+            content=f"**Vêtement:** {garment_label}\n\n👤 **Choisir le sexe du modèle ?**",
+            view=GenreSelectView(user_id),
             ephemeral=True
         )
 
@@ -223,6 +224,81 @@ class GarmentSelectView(discord.ui.View):
     async def on_timeout(self):
         """Handle view timeout."""
         # Disable all components
+        for item in self.children:
+            item.disabled = True
+
+
+# ===========================================
+# Genre Selection View
+# ===========================================
+
+class GenreSelectView(discord.ui.View):
+    """View with buttons for selecting gender."""
+
+    def __init__(self, user_id: str):
+        super().__init__(timeout=300)
+        self.user_id = user_id
+
+    @discord.ui.button(label="👨 Homme", style=discord.ButtonStyle.primary, custom_id="genre_homme")
+    async def genre_homme(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.handle_genre_selection(interaction, "homme")
+
+    @discord.ui.button(label="👩 Femme", style=discord.ButtonStyle.primary, custom_id="genre_femme")
+    async def genre_femme(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.handle_genre_selection(interaction, "femme")
+
+    async def handle_genre_selection(self, interaction: discord.Interaction, genre: str):
+        """Handle genre button click and show size selection."""
+        user_id = str(interaction.user.id)
+
+        # Verify it's the same user
+        if user_id != self.user_id:
+            await interaction.response.send_message(
+                "Cette sélection n'est pas pour vous.",
+                ephemeral=True
+            )
+            return
+
+        # Get pending upload
+        upload = get_pending_upload(user_id)
+        if not upload:
+            await interaction.response.send_message(
+                "Session expirée. Veuillez renvoyer votre image.",
+                ephemeral=True
+            )
+            return
+
+        if not upload.garment:
+            await interaction.response.send_message(
+                "Erreur: vêtement non sélectionné.",
+                ephemeral=True
+            )
+            return
+
+        # Update genre
+        upload.genre = genre
+        set_pending_upload(user_id, upload)
+
+        # Find garment label for display
+        garment_label = next(
+            (label for _, label, value in GARMENT_OPTIONS if value == upload.garment),
+            upload.garment
+        )
+
+        logger.info(f"User {user_id} selected genre: {genre}")
+
+        # Edit message to show size selection
+        await interaction.response.edit_message(
+            content=(
+                f"**Vêtement:** {garment_label}\n"
+                f"**Genre:** {genre.capitalize()}\n\n"
+                f"📏 **Quelle taille de visuel ?**"
+            ),
+            view=SizeSelectView(user_id)
+        )
+
+    async def on_timeout(self):
+        """Handle view timeout."""
         for item in self.children:
             item.disabled = True
 
@@ -300,6 +376,7 @@ class SizeSelectView(discord.ui.View):
                 product_name=product_id,
                 garment=upload.garment,
                 size=size,
+                genre=upload.genre,
                 custom_prompt=upload.custom_prompt
             )
 
@@ -319,15 +396,24 @@ class SizeSelectView(discord.ui.View):
             )
             size_labels = {"1": "Petit", "2": "Standard", "3": "Moyen", "4": "Grand"}
 
+            # Build confirmation message
+            confirmation_lines = [
+                f"✅ **Job créé avec succès !**\n",
+                f"**ID:** `{product_id}`",
+                f"**Vêtement:** {garment_label}"
+            ]
+            
+            if upload.genre:
+                confirmation_lines.append(f"**Genre:** {upload.genre.capitalize()}")
+            
+            confirmation_lines.extend([
+                f"**Taille:** {size_labels.get(size, size)}",
+                f"\n⏳ Traitement en cours... Vous recevrez l'image directement sur le message original."
+            ])
+
             # Edit the ephemeral message to remove buttons and show confirmation
             await interaction.response.edit_message(
-                content=(
-                    f"✅ **Job créé avec succès !**\n\n"
-                    f"**ID:** `{product_id}`\n"
-                    f"**Vêtement:** {garment_label}\n"
-                    f"**Taille:** {size_labels.get(size, size)}\n\n"
-                    f"⏳ Traitement en cours... Vous recevrez l'image directement sur le message original."
-                ),
+                content="\n".join(confirmation_lines),
                 view=None  # Remove buttons
             )
 
