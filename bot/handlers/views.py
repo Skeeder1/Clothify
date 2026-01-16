@@ -241,11 +241,11 @@ class GenreSelectView(discord.ui.View):
 
     @discord.ui.button(label="👨 Homme", style=discord.ButtonStyle.primary, custom_id="genre_homme")
     async def genre_homme(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.handle_genre_selection(interaction, "homme")
+        await self.handle_genre_selection(interaction, "man")
 
     @discord.ui.button(label="👩 Femme", style=discord.ButtonStyle.primary, custom_id="genre_femme")
     async def genre_femme(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.handle_genre_selection(interaction, "femme")
+        await self.handle_genre_selection(interaction, "woman")
 
     async def handle_genre_selection(self, interaction: discord.Interaction, genre: str):
         """Handle genre button click and show size selection."""
@@ -287,11 +287,14 @@ class GenreSelectView(discord.ui.View):
 
         logger.info(f"User {user_id} selected genre: {genre}")
 
+        # Map genre to French display
+        genre_display = {"man": "Homme", "woman": "Femme"}.get(genre, genre.capitalize())
+
         # Edit message to show size selection
         await interaction.response.edit_message(
             content=(
                 f"**Vêtement:** {garment_label}\n"
-                f"**Genre:** {genre.capitalize()}\n\n"
+                f"**Genre:** {genre_display}\n\n"
                 f"📏 **Quelle taille de visuel ?**"
             ),
             view=SizeSelectView(user_id)
@@ -404,7 +407,8 @@ class SizeSelectView(discord.ui.View):
             ]
             
             if upload.genre:
-                confirmation_lines.append(f"**Genre:** {upload.genre.capitalize()}")
+                genre_display = {"man": "Homme", "woman": "Femme"}.get(upload.genre, upload.genre.capitalize())
+                confirmation_lines.append(f"**Genre:** {genre_display}")
             
             confirmation_lines.extend([
                 f"**Taille:** {size_labels.get(size, size)}",
