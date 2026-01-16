@@ -26,6 +26,7 @@ class PendingUpload:
     user_name: str
     garment: Optional[str] = None
     genre: Optional[str] = None
+    background: Optional[str] = None
     custom_prompt: Optional[str] = None
     selection_message: Optional[discord.Message] = None
     created_at: datetime = field(default_factory=datetime.now)
@@ -290,11 +291,90 @@ class GenreSelectView(discord.ui.View):
         # Map genre to French display
         genre_display = {"man": "Homme", "woman": "Femme"}.get(genre, genre.capitalize())
 
-        # Edit message to show size selection
+        # Edit message to show background selection
         await interaction.response.edit_message(
             content=(
                 f"**Vêtement:** {garment_label}\n"
                 f"**Genre:** {genre_display}\n\n"
+                f"🎨 **Quel fond d'arrière-plan ?**"
+            ),
+            view=BackgroundSelectView(user_id)
+        )
+
+    async def on_timeout(self):
+        """Handle view timeout."""
+        for item in self.children:
+            item.disabled = True
+
+
+# ===========================================
+# Background Selection View
+# ===========================================
+
+class BackgroundSelectView(discord.ui.View):
+    """View with buttons for selecting background."""
+
+    def __init__(self, user_id: str):
+        super().__init__(timeout=300)
+        self.user_id = user_id
+
+    @discord.ui.button(label="⚪ Blanc", style=discord.ButtonStyle.secondary, custom_id="bg_blanc")
+    async def bg_blanc(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.handle_background_selection(interaction, "Blanc")
+
+    @discord.ui.button(label="🔘 Gris clair", style=discord.ButtonStyle.secondary, custom_id="bg_gris")
+    async def bg_gris(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.handle_background_selection(interaction, "Gris clair")
+
+    async def handle_background_selection(self, interaction: discord.Interaction, background: str):
+        """Handle background button click and show size selection."""
+        user_id = str(interaction.user.id)
+
+        # Verify it's the same user
+        if user_id != self.user_id:
+            await interaction.response.send_message(
+                "Cette sélection n'est pas pour vous.",
+                ephemeral=True
+            )
+            return
+
+        # Get pending upload
+        upload = get_pending_upload(user_id)
+        if not upload:
+            await interaction.response.send_message(
+                "Session expirée. Veuillez renvoyer votre image.",
+                ephemeral=True
+            )
+            return
+
+        if not upload.garment:
+            await interaction.response.send_message(
+                "Erreur: vêtement non sélectionné.",
+                ephemeral=True
+            )
+            return
+
+        # Update background
+        upload.background = background
+        set_pending_upload(user_id, upload)
+
+        # Find garment label for display
+        garment_label = next(
+            (label for _, label, value in GARMENT_OPTIONS if value == upload.garment),
+            upload.garment
+        )
+
+        logger.info(f"User {user_id} selected background: {background}")
+
+        # Map genre to French display
+        genre_display = {"man": "Homme", "woman": "Femme"}.get(upload.genre, upload.genre.capitalize()) if upload.genre else "Non spécifié"
+
+        # Edit message to show size selection
+        await interaction.response.edit_message(
+            content=(
+                f"**Vêtement:** {garment_label}\n"
+                f"**Genre:** {genre_display}\n"
+                f"**Fond:** {background}\n\n"
                 f"📏 **Quelle taille de visuel ?**"
             ),
             view=SizeSelectView(user_id)
@@ -380,6 +460,7 @@ class SizeSelectView(discord.ui.View):
                 garment=upload.garment,
                 size=size,
                 genre=upload.genre,
+                background=upload.background,
                 custom_prompt=upload.custom_prompt
             )
 
@@ -409,6 +490,9 @@ class SizeSelectView(discord.ui.View):
             if upload.genre:
                 genre_display = {"man": "Homme", "woman": "Femme"}.get(upload.genre, upload.genre.capitalize())
                 confirmation_lines.append(f"**Genre:** {genre_display}")
+            
+            if upload.background:
+                confirmation_lines.append(f"**Fond:** {upload.background}")
             
             confirmation_lines.extend([
                 f"**Taille:** {size_labels.get(size, size)}",
