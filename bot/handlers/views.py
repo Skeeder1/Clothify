@@ -26,7 +26,7 @@ class PendingUpload:
     user_name: str
     garment: Optional[str] = None
     genre: Optional[str] = None
-    background: Optional[str] = None
+    angle: Optional[str] = None
     custom_prompt: Optional[str] = None
     selection_message: Optional[discord.Message] = None
     created_at: datetime = field(default_factory=datetime.now)
@@ -291,14 +291,14 @@ class GenreSelectView(discord.ui.View):
         # Map genre to French display
         genre_display = {"man": "Homme", "woman": "Femme"}.get(genre, genre.capitalize())
 
-        # Edit message to show background selection
+        # Edit message to show angle selection
         await interaction.response.edit_message(
             content=(
                 f"**Vêtement:** {garment_label}\n"
                 f"**Genre:** {genre_display}\n\n"
-                f"🎨 **Quel fond d'arrière-plan ?**"
+                f"📐 **Quel angle de vue ?**"
             ),
-            view=BackgroundSelectView(user_id)
+            view=AngleSelectView(user_id)
         )
 
     async def on_timeout(self):
@@ -308,26 +308,34 @@ class GenreSelectView(discord.ui.View):
 
 
 # ===========================================
-# Background Selection View
+# Angle Selection View
 # ===========================================
 
-class BackgroundSelectView(discord.ui.View):
-    """View with buttons for selecting background."""
+class AngleSelectView(discord.ui.View):
+    """View with buttons for selecting angle."""
 
     def __init__(self, user_id: str):
         super().__init__(timeout=300)
         self.user_id = user_id
 
-    @discord.ui.button(label="⚪ Blanc", style=discord.ButtonStyle.secondary, custom_id="bg_blanc")
-    async def bg_blanc(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.handle_background_selection(interaction, "Blanc")
+    @discord.ui.button(label="👤 Face", style=discord.ButtonStyle.primary, custom_id="angle_face")
+    async def angle_face(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.handle_angle_selection(interaction, "face")
 
-    @discord.ui.button(label="🔘 Gris clair", style=discord.ButtonStyle.secondary, custom_id="bg_gris")
-    async def bg_gris(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.handle_background_selection(interaction, "Gris clair")
+    @discord.ui.button(label="🔄 Profil", style=discord.ButtonStyle.secondary, custom_id="angle_profil")
+    async def angle_profil(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.handle_angle_selection(interaction, "Profil")
 
-    async def handle_background_selection(self, interaction: discord.Interaction, background: str):
-        """Handle background button click and show size selection."""
+    @discord.ui.button(label="🔙 Dos", style=discord.ButtonStyle.secondary, custom_id="angle_dos")
+    async def angle_dos(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.handle_angle_selection(interaction, "dos")
+
+    @discord.ui.button(label="↗️ Trois-quarts face", style=discord.ButtonStyle.secondary, custom_id="angle_3quarts")
+    async def angle_3quarts(self, interaction: discord.Interaction, button: discord.ui.Button):
+        await self.handle_angle_selection(interaction, "Trois-quarts face")
+
+    async def handle_angle_selection(self, interaction: discord.Interaction, angle: str):
+        """Handle angle button click and show size selection."""
         user_id = str(interaction.user.id)
 
         # Verify it's the same user
@@ -354,8 +362,8 @@ class BackgroundSelectView(discord.ui.View):
             )
             return
 
-        # Update background
-        upload.background = background
+        # Update angle
+        upload.angle = angle
         set_pending_upload(user_id, upload)
 
         # Find garment label for display
@@ -364,7 +372,7 @@ class BackgroundSelectView(discord.ui.View):
             upload.garment
         )
 
-        logger.info(f"User {user_id} selected background: {background}")
+        logger.info(f"User {user_id} selected angle: {angle}")
 
         # Map genre to French display
         genre_display = {"man": "Homme", "woman": "Femme"}.get(upload.genre, upload.genre.capitalize()) if upload.genre else "Non spécifié"
@@ -374,7 +382,7 @@ class BackgroundSelectView(discord.ui.View):
             content=(
                 f"**Vêtement:** {garment_label}\n"
                 f"**Genre:** {genre_display}\n"
-                f"**Fond:** {background}\n\n"
+                f"**Angle:** {angle}\n\n"
                 f"📏 **Quelle taille de visuel ?**"
             ),
             view=SizeSelectView(user_id)
@@ -460,7 +468,7 @@ class SizeSelectView(discord.ui.View):
                 garment=upload.garment,
                 size=size,
                 genre=upload.genre,
-                background=upload.background,
+                angle=upload.angle,
                 custom_prompt=upload.custom_prompt
             )
 
@@ -491,8 +499,8 @@ class SizeSelectView(discord.ui.View):
                 genre_display = {"man": "Homme", "woman": "Femme"}.get(upload.genre, upload.genre.capitalize())
                 confirmation_lines.append(f"**Genre:** {genre_display}")
             
-            if upload.background:
-                confirmation_lines.append(f"**Fond:** {upload.background}")
+            if upload.angle:
+                confirmation_lines.append(f"**Angle:** {upload.angle}")
             
             confirmation_lines.extend([
                 f"**Taille:** {size_labels.get(size, size)}",

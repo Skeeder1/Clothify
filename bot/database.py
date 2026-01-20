@@ -97,7 +97,7 @@ async def create_job(
     garment: str,
     size: str,
     genre: Optional[str] = None,
-    background: Optional[str] = None,
+    angle: Optional[str] = None,
     custom_prompt: Optional[str] = None
 ) -> UUID:
     """
@@ -111,7 +111,7 @@ async def create_job(
         garment: Garment type
         size: Size code
         genre: Gender selection (Homme/Femme)
-        background: Background selection (Blanc/Gris clair)
+        angle: Angle selection (face/Profil/dos/Trois-quarts face)
         custom_prompt: Optional custom prompt from message content
 
     Returns:
@@ -126,13 +126,13 @@ async def create_job(
             """
             INSERT INTO jobs (
                 user_id, discord_message_id,
-                input_file_paths, product_name, garment, genre, background, size, custom_prompt, status
+                input_file_paths, product_name, garment, genre, angle, size, custom_prompt, status
             )
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8::size_code, $9, 'pending')
             RETURNING id
             """,
             user_id, discord_message_id,
-            input_paths_str, product_name, garment, genre, background, size, custom_prompt
+            input_paths_str, product_name, garment, genre, angle, size, custom_prompt
         )
 
         # Update user's total_jobs count
