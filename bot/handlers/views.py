@@ -401,15 +401,15 @@ class SizeSelectView(discord.ui.View):
     async def size_1(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.handle_size_selection(interaction, "1")
 
-    @discord.ui.button(label="2 - Standard", style=discord.ButtonStyle.primary, custom_id="size_2")
+    @discord.ui.button(label="2 - Moyen", style=discord.ButtonStyle.primary, custom_id="size_2")
     async def size_2(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.handle_size_selection(interaction, "2")
 
-    @discord.ui.button(label="3 - Moyen", style=discord.ButtonStyle.primary, custom_id="size_3")
+    @discord.ui.button(label="3 - Grand", style=discord.ButtonStyle.primary, custom_id="size_3")
     async def size_3(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.handle_size_selection(interaction, "3")
 
-    @discord.ui.button(label="4 - Grand", style=discord.ButtonStyle.secondary, custom_id="size_4")
+    @discord.ui.button(label="4 - Très grand", style=discord.ButtonStyle.secondary, custom_id="size_4")
     async def size_4(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.handle_size_selection(interaction, "4")
 
