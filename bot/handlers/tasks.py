@@ -131,11 +131,8 @@ async def _send_image_reply(
     """
     file = discord.File(image_path, filename=Path(image_path).name)
     
-    # Send image in channel with user mention
-    await message.channel.send(
-        content=f"**Image générée !**\n**Produit:** `{product_name}`\n**Demandé par:** {message.author.mention}",
-        file=file
-    )
+    # Send image in channel without text
+    await message.channel.send(file=file)
 
     # Delete original message (with user's uploaded image)
     try:
