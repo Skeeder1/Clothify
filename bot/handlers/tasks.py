@@ -39,7 +39,8 @@ def set_discord_client(client: discord.Client) -> None:
 async def start_job_watcher(
     job_id: UUID,
     discord_message: discord.Message,
-    product_name: str
+    product_name: str,
+    interaction: discord.Interaction = None
 ) -> None:
     """
     Start a watcher task for a specific job.
@@ -51,9 +52,10 @@ async def start_job_watcher(
         job_id: UUID of the job to watch
         discord_message: Original Discord message to reply to
         product_name: Product name/ID for the response
+        interaction: Discord interaction for ephemeral error messages
     """
     asyncio.create_task(
-        _watch_job(job_id, discord_message, product_name)
+        _watch_job(job_id, discord_message, product_name, interaction)
     )
     logger.info(f"Started watcher for job {job_id}")
 
@@ -61,7 +63,8 @@ async def start_job_watcher(
 async def _watch_job(
     job_id: UUID,
     discord_message: discord.Message,
-    product_name: str
+    product_name: str,
+    interaction: discord.Interaction = None
 ) -> None:
     """
     Watch a job and send the image when ready.
@@ -70,6 +73,7 @@ async def _watch_job(
         job_id: UUID of the job to watch
         discord_message: Original Discord message to reply to
         product_name: Product name/ID for the response
+        interaction: Discord interaction for ephemeral error messages
     """
     elapsed = 0
 
@@ -101,13 +105,15 @@ async def _watch_job(
     logger.error(f"Job {job_id} timed out after {WATCH_TIMEOUT}s")
     await update_job_status(job_id, "error", f"Timeout after {WATCH_TIMEOUT}s - no response from n8n")
 
-    # Notify user of timeout
-    try:
-        await discord_message.reply(
-            content=f"**Erreur:** Le traitement de `{product_name}` a expire (timeout {WATCH_TIMEOUT}s)."
-        )
-    except Exception:
-        pass
+    # Notify user of timeout via ephemeral message (visible only to them)
+    if interaction:
+        try:
+            await interaction.followup.send(
+                content=f"**❌ Erreur:** Le traitement de `{product_name}` a expiré (timeout {WATCH_TIMEOUT}s).\nVeuillez réessayer.",
+                ephemeral=True
+            )
+        except Exception as e:
+            logger.warning(f"Could not send ephemeral error: {e}")
 
 
 async def _send_image_reply(
@@ -116,7 +122,7 @@ async def _send_image_reply(
     product_name: str
 ) -> None:
     """
-    Send the generated image as a reply to the original message.
+    Send the generated image and delete the original message.
 
     Args:
         message: Discord message to reply to
@@ -124,20 +130,18 @@ async def _send_image_reply(
         product_name: Product name/ID
     """
     file = discord.File(image_path, filename=Path(image_path).name)
-    await message.reply(
-        content=f"**Image generee !**\n**Produit:** `{product_name}`",
+    
+    # Send image in channel with user mention
+    await message.channel.send(
+        content=f"**Image générée !**\n**Produit:** `{product_name}`\n**Demandé par:** {message.author.mention}",
         file=file
     )
 
-    # Update reactions: remove hourglass, add checkmark
+    # Delete original message (with user's uploaded image)
     try:
-        await message.remove_reaction("\u23f3", _discord_client.user)
-    except (discord.errors.NotFound, discord.errors.Forbidden, AttributeError):
-        pass
+        await message.delete()
+        logger.info(f"Deleted original message for product {product_name}")
+    except (discord.errors.NotFound, discord.errors.Forbidden) as e:
+        logger.warning(f"Could not delete original message: {e}")
 
-    try:
-        await message.add_reaction("\u2705")
-    except (discord.errors.Forbidden, AttributeError):
-        pass
-
-    logger.info(f"Sent image reply for product {product_name}")
+    logger.info(f"Sent image for product {product_name}")

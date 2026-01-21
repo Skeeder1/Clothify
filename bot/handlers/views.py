@@ -29,6 +29,7 @@ class PendingUpload:
     angle: Optional[str] = None
     custom_prompt: Optional[str] = None
     selection_message: Optional[discord.Message] = None
+    last_interaction: Optional[discord.Interaction] = None
     created_at: datetime = field(default_factory=datetime.now)
 
 
@@ -324,7 +325,7 @@ class AngleSelectView(discord.ui.View):
 
     @discord.ui.button(label="🔄 Profil", style=discord.ButtonStyle.secondary, custom_id="angle_profil")
     async def angle_profil(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.handle_angle_selection(interaction, "Profil")
+        await self.handle_angle_selection(interaction, "profil")
 
     @discord.ui.button(label="🔙 Dos", style=discord.ButtonStyle.secondary, custom_id="angle_dos")
     async def angle_dos(self, interaction: discord.Interaction, button: discord.ui.Button):
@@ -332,7 +333,7 @@ class AngleSelectView(discord.ui.View):
 
     @discord.ui.button(label="↗️ Trois-quarts face", style=discord.ButtonStyle.secondary, custom_id="angle_3quarts")
     async def angle_3quarts(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.handle_angle_selection(interaction, "Trois-quarts face")
+        await self.handle_angle_selection(interaction, "trois-quarts face")
 
     async def handle_angle_selection(self, interaction: discord.Interaction, angle: str):
         """Handle angle button click and show size selection."""
@@ -473,7 +474,7 @@ class SizeSelectView(discord.ui.View):
             )
 
             # Start job watcher (monitors DB and sends image when ready)
-            await start_job_watcher(job_id, upload.original_message, product_id)
+            await start_job_watcher(job_id, upload.original_message, product_id, interaction)
 
             # React to original message
             try:
