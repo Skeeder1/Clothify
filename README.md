@@ -8,13 +8,14 @@ professional e-commerce product visual, powered by image models served through
 
 The user uploads a flat photo of a garment; the pipeline returns a model wearing it.
 
-| Input (uploaded to Discord) | Generated output |
-|---|---|
-| <img src="docs/images/exemple-pull-source.jpg" width="240"> | <img src="docs/images/exemple-pull-openrouter.jpg" width="240"> |
+| Input (uploaded to Discord) | Generated output | Alternate angle |
+|---|---|---|
+| <img src="docs/images/exemple-pull-source.jpg" width="200"> | <img src="docs/images/exemple-pull-openrouter.jpg" width="200"> | <img src="docs/images/exemple-pull-dos.jpg" width="200"> |
 
-<img src="docs/images/exemple-maillot-openrouter.jpg" width="320">
+<img src="docs/images/exemple-maillot-openrouter.jpg" width="300">
 
-*Generated with `openai/gpt-5-image-mini` — 1024×1024, ~50 s, ~$0.05 per image.*
+*Generated with `openai/gpt-5.4-image-2` — 1024×1024, ~135 s end-to-end, ~$0.23 per image.
+Cheaper presets are one command away: see `scripts/switch_model.py`.*
 
 ## 🚀 Quick Start
 

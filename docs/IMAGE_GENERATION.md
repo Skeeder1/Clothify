@@ -78,8 +78,9 @@ Endpoint : `POST https://openrouter.ai/api/v1/chat/completions`
 
 ```json
 {
-  "model": "openai/gpt-5-image-mini",
+  "model": "openai/gpt-5.4-image-2",
   "modalities": ["image", "text"],
+  "max_tokens": 16384,
   "messages": [{
     "role": "user",
     "content": [
@@ -97,6 +98,12 @@ Endpoint : `POST https://openrouter.ai/api/v1/chat/completions`
 - L'image d'entrée est un **data URI complet**, préfixe MIME inclus, sans
   retour à la ligne dans le base64.
 - `detail` accepte `auto`, `low`, `high`, `original`.
+- **`max_tokens` n'est pas optionnel en pratique.** OpenRouter réserve du crédit
+  sur le *pire cas* — la valeur de `max_tokens` — et non sur la consommation
+  réelle. Sans plafond, la requête réclame le maximum du modèle (65 536 tokens)
+  et part en **402 Payment Required** dès que le solde est modeste, alors que
+  l'image ne coûtera que quelques centimes. Une image pèse ~7 000 tokens de
+  sortie ; 16 384 laisse une marge large.
 
 ### Réponse
 
@@ -123,8 +130,10 @@ Mesurés sur des appels réels, image d'entrée 1024 px, sortie 1024×1024 :
 
 | Modèle | Tokens image | Coût / image | Latence |
 |---|---|---|---|
-| `openai/gpt-5-image-mini` **(actuel)** | ~7 000 | **~0,05 $** | 50-60 s |
-| `openai/gpt-5.4-image-2` | 7 024 | 0,232 $ | ~100 s |
+| `openai/gpt-5.4-image-2` **(actuel)** | 7 024 | **~0,23 $** | 133-135 s |
+| `openai/gpt-5-image` | 4 175 | 0,224 $ | ~79 s |
+| `openai/gpt-5-image-mini` | ~7 000 | 0,051 $ | 50-60 s |
+| `google/gemini-3-pro-image` | 1 120 | 0,137 $ | ~19 s |
 
 Le tarif par token est trompeur : une image générée pèse ~7 000 tokens de
 sortie, soit 5 à 6 fois plus qu'une estimation naïve à 1 290 tokens. **Toujours
@@ -194,6 +203,7 @@ Cinq causes réelles rencontrées en production, avec leur signature exacte.
 | `401 — No cookie auth credentials found` | `nodeCredentialType` employé au lieu de `genericAuthType` | `genericAuthType: "httpHeaderAuth"` |
 | Statut bloqué à `processing`, fichier pourtant écrit | course entre `Update Processing` et `Update Done` | chaîne séquentielle (§2) |
 | Exécution `canceled` à exactement 60 s | `executionTimeout: 60` dans les réglages du workflow | relever à **600 s** |
+| `402 Payment required — you requested up to 65536 tokens, but can only afford N` | `max_tokens` absent du corps de requête | fixer `max_tokens: 16384` |
 
 Le dernier est le plus coûteux : l'appel est annulé **après** facturation, donc
 chaque échec consomme du crédit sans produire d'image.

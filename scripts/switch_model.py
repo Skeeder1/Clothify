@@ -31,32 +31,38 @@ TEST_ID = "emFvQESqlf4RPN6Q"
 PROD_NAME = "production-Clothify-n8n"
 REMOTE = "/tmp/switch_model_wf.json"
 
-# Presets OpenRouter : même endpoint, même credential, même format.
-# Seul l'identifiant de modèle change — coûts mesurés sur des appels réels.
+# Presets OpenRouter : même endpoint, même credential, même format ; seul
+# l'identifiant de modèle change. Coûts et latences ci-dessous mesurés sur une
+# comparaison réelle (même image, même prompt, 2026-08-09), pas estimés.
 PRESETS = {
-    "gpt-5-image-mini": {
-        "provider": "openrouter",
-        "model": "openai/gpt-5-image-mini",
-        "cost": "~0,05 $/image",
-        "note": "défaut actuel — bon rapport qualité/prix, texte imprimé parfois déformé",
-    },
     "gpt-5.4-image-2": {
         "provider": "openrouter",
         "model": "openai/gpt-5.4-image-2",
-        "cost": "~0,23 $/image",
-        "note": "meilleure fidélité, 4,6x plus cher, ~100 s par image",
+        "cost": "0,230 $/image",
+        "note": "DÉFAUT — meilleur rendu mesuré : plan complet, morphologie "
+                "conforme, logo lisible. ~135 s de bout en bout.",
+    },
+    "gpt-5-image-mini": {
+        "provider": "openrouter",
+        "model": "openai/gpt-5-image-mini",
+        "cost": "0,051 $/image",
+        "note": "4,5x moins cher et 2x plus rapide ; déforme les petits textes "
+                "brodés. Le bon choix si le volume prime sur la finition.",
     },
     "gpt-5-image": {
         "provider": "openrouter",
         "model": "openai/gpt-5-image",
-        "cost": "~0,30 $/image",
-        "note": "haut de gamme OpenAI",
+        "cost": "0,224 $/image",
+        "note": "prix équivalent à gpt-5.4-image-2 mais qualité inférieure sur "
+                "notre test (logo illisible, morphologie hors consigne).",
     },
     "gemini-3-pro": {
         "provider": "openrouter",
         "model": "google/gemini-3-pro-image",
-        "cost": "~0,16 $/image",
-        "note": "Nano Banana Pro — le modèle historique du projet",
+        "cost": "0,137 $/image",
+        "note": "le plus rapide (~19 s) et superbe sur la matière, MAIS recopie "
+                "le cadrage de l'image source — sur une capture d'app, il "
+                "reproduit l'interface. À réserver aux entrées déjà détourées.",
     },
 }
 
