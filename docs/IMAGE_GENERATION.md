@@ -136,7 +136,20 @@ un aplat de couleur.
 
 ### Changer de modèle
 
-Une seule ligne, dans le nœud `📦 Prepare API Body` :
+Une commande, à lancer sur l'hôte Docker :
+
+```bash
+sudo python3 scripts/switch_model.py --list            # presets + modèle courant
+sudo python3 scripts/switch_model.py --dry-run gpt-5.4-image-2
+sudo python3 scripts/switch_model.py gpt-5.4-image-2   # bascule + redéploiement
+```
+
+Le script enchaîne export → patch → import → réactivation → redémarrage →
+vérification, et il est idempotent (rebasculer sur le modèle courant ne fait
+rien). Presets fournis : `gpt-5-image-mini`, `gpt-5.4-image-2`, `gpt-5-image`,
+`gemini-3-pro`.
+
+Manuellement, cela revient à modifier une ligne du nœud `📦 Prepare API Body` :
 
 ```js
 const apiBody = {
@@ -146,12 +159,29 @@ const apiBody = {
 };
 ```
 
-Puis réimporter et réactiver (voir §6). Les modèles disponibles se listent avec :
+…puis à réimporter et réactiver (§6). Les modèles image disponibles se listent avec :
 
 ```bash
 curl -s https://openrouter.ai/api/v1/models \
   | jq -r '.data[] | select(.architecture.output_modalities[]? == "image") | .id'
 ```
+
+### Ajouter un fournisseur (Qwen, FLUX, HiDream…)
+
+**Aucun modèle open-weight n'est servi par OpenRouter** : sur 400 modèles au
+catalogue, les 11 qui produisent des images sont tous Google ou OpenAI (vérifié
+le 2026-08-09). Utiliser Qwen-Image-Edit, FLUX ou HiDream impose donc un
+**second fournisseur** — fal.ai ou DeepInfra.
+
+Ce n'est pas un changement de modèle mais un changement de contrat : endpoint,
+credential, format de requête et format de réponse diffèrent tous. Un nouveau
+preset dans `scripts/switch_model.py` doit alors porter, en plus de `model`,
+l'URL, la credential et le code des nœuds `📦 Prepare API Body` et
+`🖼️ Extract Image`.
+
+À savoir pour arbitrer : **tous les modèles atteignables via OpenRouter marquent
+leurs images** — SynthID chez Google, C2PA *et* SynthID chez OpenAI depuis mai
+2026. Les modèles open-weight n'embarquent pas de marquage.
 
 ## 5. Modes de défaillance connus
 

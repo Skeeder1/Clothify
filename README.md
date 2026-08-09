@@ -83,6 +83,10 @@ psql postgresql://postgres:postgres@localhost:5432/clothify
 # Inserts a single job and waits for the output file.
 # ⚠ consumes API credit (~$0.05 per run)
 bash scripts/e2e_test.sh <source_image> <garment> <genre> <size> <timeout_s>
+
+# Switch image model (run on the Docker host)
+sudo python3 scripts/switch_model.py --list
+sudo python3 scripts/switch_model.py gpt-5.4-image-2
 ```
 
 ## 🔧 Architecture
