@@ -1,0 +1,1069 @@
+{
+  "updatedAt": "2026-01-23T17:35:13.000Z",
+  "createdAt": "2026-01-08T14:36:45.412Z",
+  "id": "emFvQESqlf4RPN6Q",
+  "name": "test-clothify-n8n",
+  "active": false,
+  "isArchived": false,
+  "nodes": [
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "id": "condition-pending",
+              "leftValue": "={{ $json.payload.status }}",
+              "rightValue": "pending",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "01956dae-1779-4bd4-a02b-8f3a0ea9c966",
+      "name": "🔍 Filter Pending",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        -2016,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id": "={{ $('Postgres Trigger').item.json.payload.id }}",
+            "started_at": "={{ $now }}",
+            "status": "processing"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "discord_message_id",
+              "displayName": "discord_message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "custom_prompt",
+              "displayName": "custom_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "input_file_paths",
+              "displayName": "input_file_paths",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "output_file_path",
+              "displayName": "output_file_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "product_name",
+              "displayName": "product_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "garment",
+              "displayName": "garment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "other",
+                  "value": "other"
+                },
+                {
+                  "name": "sac",
+                  "value": "sac"
+                },
+                {
+                  "name": "casquette",
+                  "value": "casquette"
+                },
+                {
+                  "name": "bonnet",
+                  "value": "bonnet"
+                },
+                {
+                  "name": "robe",
+                  "value": "robe"
+                },
+                {
+                  "name": "jupe",
+                  "value": "jupe"
+                },
+                {
+                  "name": "short",
+                  "value": "short"
+                },
+                {
+                  "name": "jean",
+                  "value": "jean"
+                },
+                {
+                  "name": "pantalon",
+                  "value": "pantalon"
+                },
+                {
+                  "name": "manteau",
+                  "value": "manteau"
+                },
+                {
+                  "name": "veste",
+                  "value": "veste"
+                },
+                {
+                  "name": "chemise",
+                  "value": "chemise"
+                },
+                {
+                  "name": "tshirt",
+                  "value": "tshirt"
+                },
+                {
+                  "name": "pull",
+                  "value": "pull"
+                },
+                {
+                  "name": "echarpe",
+                  "value": "echarpe"
+                }
+              ],
+              "removed": true
+            },
+            {
+              "id": "size",
+              "displayName": "size",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "4",
+                  "value": "4"
+                },
+                {
+                  "name": "3",
+                  "value": "3"
+                },
+                {
+                  "name": "2",
+                  "value": "2"
+                },
+                {
+                  "name": "1",
+                  "value": "1"
+                }
+              ],
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "sent",
+                  "value": "sent"
+                },
+                {
+                  "name": "error",
+                  "value": "error"
+                },
+                {
+                  "name": "done",
+                  "value": "done"
+                },
+                {
+                  "name": "processing",
+                  "value": "processing"
+                },
+                {
+                  "name": "pending",
+                  "value": "pending"
+                }
+              ],
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "completed_at",
+              "displayName": "completed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "08f0d604-7967-4f58-8622-a356dc786178",
+      "name": "📝 Update Processing",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1808,
+        336
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "lnfC6bEjHY6BRjTN",
+          "name": "Postgres Serveur"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "fileSelector": "={{ $('🏷️ Parse Job Data').item.json.inputFilePaths[0] }}",
+        "options": {}
+      },
+      "id": "bb9ffcf6-9dc4-4aaa-999d-ee850b4bdcf0",
+      "name": "📷 Read Image",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -960,
+        160
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Récupérer les données depuis Generate Prompt (qui contient le prompt)\nconst promptData = $('✨ Generate Prompt').first().json;\n\n// Récupérer TOUTES les images lues\nconst allItems = $input.all();\n\n// Format OpenAI/OpenRouter : un tableau de parts typées\nconst content = [\n  { type: 'text', text: promptData.prompt }\n];\n\n// Chaque image est envoyée en data URI base64\nfor (const item of allItems) {\n  const binaryData = item.binary?.data?.data;\n  if (binaryData) {\n    const mimeType = item.json.mimeType || 'image/png';\n    content.push({\n      type: 'image_url',\n      image_url: {\n        url: `data:${mimeType};base64,${binaryData}`,\n        detail: 'high'\n      }\n    });\n  }\n}\n\nif (content.length === 1) {\n  return [{\n    json: {\n      error: 'No images found!',\n      totalItems: allItems.length\n    }\n  }];\n}\n\n// Build OpenRouter API body\nconst apiBody = {\n  model: 'openai/gpt-5-image-mini',\n  modalities: ['image', 'text'],\n  messages: [\n    {\n      role: 'user',\n      content: content\n    }\n  ]\n};\n\nreturn [{\n  json: {\n    ...promptData,\n    apiBody,\n    imagesCount: content.length - 1\n  }\n}];"
+      },
+      "id": "bf886ffc-d00d-4562-a52d-3347af81936a",
+      "name": "📦 Prepare API Body",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -624,
+        160
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const response = $input.first().json;\nconst promptData = $('✨ Generate Prompt').item.json;\n\nlet imageBase64 = null;\nlet textResponse = '';\n\n// Erreur renvoyée par OpenRouter (200 avec corps d'erreur, ou relais fournisseur)\nif (response.error) {\n  const msg = response.error.message || JSON.stringify(response.error);\n  throw new Error('OpenRouter error: ' + msg);\n}\n\nconst choice = (response.choices || [])[0];\nconst message = choice ? choice.message : null;\n\nif (message) {\n  if (typeof message.content === 'string') {\n    textResponse = message.content;\n  }\n  if (message.refusal) {\n    throw new Error('Model refused the request: ' + message.refusal);\n  }\n  // L'image est dans choices[0].message.images[].image_url.url\n  for (const img of (message.images || [])) {\n    const url = img?.image_url?.url;\n    if (!url) continue;\n    if (url.startsWith('data:')) {\n      // data URI complet : on ne garde que la charge base64\n      imageBase64 = url.slice(url.indexOf(',') + 1);\n    } else {\n      throw new Error('Image returned as remote URL, not base64: ' + url.slice(0, 120));\n    }\n  }\n}\n\nif (!imageBase64) {\n  const reason = choice ? (choice.finish_reason || 'unknown') : 'no choice';\n  throw new Error(\n    'No image in API response (finish_reason=' + reason + '): ' +\n    JSON.stringify(response).substring(0, 500)\n  );\n}\n\nreturn [{\n  json: {\n    jobId: promptData.jobId,\n    outputPath: promptData.outputPath,\n    fileName: promptData.fileName,\n    nameWithoutExt: promptData.nameWithoutExt,\n    textResponse,\n    success: true\n  },\n  binary: {\n    data: {\n      data: imageBase64,\n      mimeType: 'image/png',\n      fileName: promptData.nameWithoutExt + '_generated.png'\n    }\n  }\n}];"
+      },
+      "id": "7fc580bb-033a-4790-8933-598a4fe71462",
+      "name": "🖼️ Extract Image",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -240,
+        160
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "output_file_path": "={{ $('🖼️ Extract Image').item.json.outputPath }}",
+            "completed_at": "={{ $now.toISO() }}",
+            "id": "={{ $('Postgres Trigger').item.json.payload.id }}",
+            "status": "done"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "discord_message_id",
+              "displayName": "discord_message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "custom_prompt",
+              "displayName": "custom_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "input_file_paths",
+              "displayName": "input_file_paths",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "output_file_path",
+              "displayName": "output_file_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "product_name",
+              "displayName": "product_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "garment",
+              "displayName": "garment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "other",
+                  "value": "other"
+                },
+                {
+                  "name": "sac",
+                  "value": "sac"
+                },
+                {
+                  "name": "casquette",
+                  "value": "casquette"
+                },
+                {
+                  "name": "bonnet",
+                  "value": "bonnet"
+                },
+                {
+                  "name": "robe",
+                  "value": "robe"
+                },
+                {
+                  "name": "jupe",
+                  "value": "jupe"
+                },
+                {
+                  "name": "short",
+                  "value": "short"
+                },
+                {
+                  "name": "jean",
+                  "value": "jean"
+                },
+                {
+                  "name": "pantalon",
+                  "value": "pantalon"
+                },
+                {
+                  "name": "manteau",
+                  "value": "manteau"
+                },
+                {
+                  "name": "veste",
+                  "value": "veste"
+                },
+                {
+                  "name": "chemise",
+                  "value": "chemise"
+                },
+                {
+                  "name": "tshirt",
+                  "value": "tshirt"
+                },
+                {
+                  "name": "pull",
+                  "value": "pull"
+                },
+                {
+                  "name": "echarpe",
+                  "value": "echarpe"
+                }
+              ],
+              "removed": true
+            },
+            {
+              "id": "size",
+              "displayName": "size",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "4",
+                  "value": "4"
+                },
+                {
+                  "name": "3",
+                  "value": "3"
+                },
+                {
+                  "name": "2",
+                  "value": "2"
+                },
+                {
+                  "name": "1",
+                  "value": "1"
+                }
+              ],
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "sent",
+                  "value": "sent"
+                },
+                {
+                  "name": "error",
+                  "value": "error"
+                },
+                {
+                  "name": "done",
+                  "value": "done"
+                },
+                {
+                  "name": "processing",
+                  "value": "processing"
+                },
+                {
+                  "name": "pending",
+                  "value": "pending"
+                }
+              ],
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "completed_at",
+              "displayName": "completed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "id": "6f598cfa-d0a8-44d3-8b11-770c7d2ed2c0",
+      "name": "✅ Update Done",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        272,
+        160
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "lnfC6bEjHY6BRjTN",
+          "name": "Postgres Serveur"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const extractData = $('🖼️ Extract Image').item.json;\nconst promptData = $('✨ Generate Prompt').item.json;\n\nreturn [{\n  json: {\n    status: '✅ SUCCESS',\n    jobId: extractData.jobId,\n    input: promptData.fileName,\n    output: extractData.outputPath,\n    product: promptData.productName,\n    type: promptData.garmentType,\n    size: promptData.sizeInfo.label,\n    completedAt: new Date().toISOString()\n  }\n}];"
+      },
+      "id": "ff52caee-f0b8-4e07-ad39-d12a8751fe4b",
+      "name": "📊 Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        496,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the error and job ID from context\nconst errorMessage = $input.first().json?.error?.message || $execution?.error?.message || 'Unknown error during processing';\n\n// Try to get jobId from various possible sources\nlet jobId = null;\ntry {\n  jobId = $('🏷️ Parse Job Data2').item?.json?.jobId;\n} catch (e) {\n  try {\n    jobId = $('📝 Update Processing').item?.json?.id;\n  } catch (e2) {\n    try {\n      jobId = $('🔍 Filter Pending').item?.json?.id;\n    } catch (e3) {\n      // No job ID found\n    }\n  }\n}\n\nif (!jobId) {\n  throw new Error('Cannot update error status: no job ID found. Original error: ' + errorMessage);\n}\n\nreturn [{\n  json: {\n    jobId,\n    errorMessage: errorMessage.substring(0, 1000)\n  }\n}];"
+      },
+      "id": "bb8f2310-d68a-4608-993c-fb1838fd8ae6",
+      "name": "⚠️ Prepare Error",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        192,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "jobs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "status": "error",
+            "error_message": "={{ $json.errorMessage }}",
+            "completed_at": "={{ $now.toISO() }}"
+          }
+        },
+        "options": {}
+      },
+      "id": "906d5086-74e6-4596-9566-b37a261a3824",
+      "name": "❌ Update Error",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        384,
+        400
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "lnfC6bEjHY6BRjTN",
+          "name": "Postgres Serveur"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "write",
+        "fileName": "={{ $json.outputPath }}",
+        "options": {}
+      },
+      "id": "f696eb55-5ea8-4cbf-beb2-e4501474c854",
+      "name": "💾 Save Output",
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        48,
+        160
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "name",
+          "value": "public"
+        },
+        "tableName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "jobs"
+        },
+        "additionalFields": {
+          "channelName": "n8n_jobs_channel",
+          "functionName": "notify_n8n_new_job",
+          "replaceIfExists": true,
+          "triggerName": "trg_n8n_new_job"
+        },
+        "options": {
+          "connectionTimeout": 120,
+          "delayClosingIdleConnection": 0
+        }
+      },
+      "id": "122b0f59-e66b-4e52-89e8-62f45f7f2be6",
+      "name": "Postgres Trigger",
+      "type": "n8n-nodes-base.postgresTrigger",
+      "typeVersion": 1,
+      "position": [
+        -2208,
+        160
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "lnfC6bEjHY6BRjTN",
+          "name": "Postgres Serveur"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "HTTP-Referer",
+              "value": "https://github.com/Skeeder1/Clothify"
+            },
+            {
+              "name": "X-Title",
+              "value": "Clothify"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.apiBody) }}",
+        "options": {
+          "timeout": 300000
+        }
+      },
+      "name": "🎨 OpenRouter Image",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -432,
+        160
+      ],
+      "id": "81a5fc25-baa4-45db-8989-dddc418cc0e9",
+      "executeOnce": false,
+      "retryOnFail": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "openrouterClothify01",
+          "name": "OpenRouter Clothify"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-preview-image-generation:generateContent?key={{ $env.GOOGLE_AI_API_KEY }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.apiBody) }}",
+        "options": {
+          "timeout": 180000
+        }
+      },
+      "id": "494b1e32-79a2-4729-9063-bc4ecfdc9f6f",
+      "name": "🍌 NanoBanana",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -96,
+        -112
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const job = $('Postgres Trigger').first().json.payload;\nconst jobId = job.id;\n\n// Chemins Docker\nconst inputBasePath = '/clothify_shared/input_image/';\nconst outputBasePath = '/clothify_shared/output_image/';\n\n// Gestion robuste des inputs\nlet inputFilePaths = job.input_file_paths || [];\nif (typeof inputFilePaths === 'string') {\n  inputFilePaths = JSON.parse(inputFilePaths);\n}\n\n// Normalisation des entrées\nconst garmentType = String(job.garment || 'other').toLowerCase();\nconst sizeCode = String(job.size || '2');\n// --- NEW: Extraction de l'angle (défaut sur 'face' si vide) ---\nconst angleCode = String(job.angle || 'face').toLowerCase().trim(); \n\nconst productName = job.product_name || 'product';\nconst customPrompt = job.custom_prompt || null;\n\nif (!inputFilePaths || inputFilePaths.length === 0) {\n  throw new Error('No input files found for job: ' + jobId);\n}\n\n// Logique de taille\nfunction getSizeInfo(code) {\n  switch(code) {\n    case '1': return { code: 'XS', label: 'Extra Small', bodyDescription: 'petite slim build, 155-160cm', fit: 'fitted' };\n    case '3': return { code: 'L', label: 'Large', bodyDescription: 'athletic build, 175-180cm', fit: 'comfortable fit' };\n    case '4': return { code: 'XL', label: 'Extra Large', bodyDescription: 'plus size, 170-175cm', fit: 'relaxed fit' };\n    default: return { code: 'S/M', label: 'Small/Medium', bodyDescription: 'average build, 165-170cm', fit: 'regular fit' };\n  }\n}\n\n// --- NEW: Logique d'angle de caméra ---\nfunction getAngleInfo(code) {\n  // On matche les clés exactes fournies (face, profil, dos, trois-quarts face)\n  switch(code) {\n    case 'profil': \n      return { \n        code: 'profil', \n        prompt: \"full side profile (90° yaw)\", \n        technical_description: 'Side View' \n      };\n    case 'dos': \n      return { \n        code: 'dos', \n        prompt: \"direct back view (180° yaw)\", \n        technical_description: 'Back View' \n      };\n    case 'trois-quarts face': \n      return { \n        code: 'trois-quarts face', \n        prompt: \"standard three-quarter front view (~45° yaw)\", \n        technical_description: '3/4 View' \n      };\n    case 'face':\n    default: \n      // Cas par défaut (face)\n      return { \n        code: 'face', \n        prompt: \"direct front view (0° yaw)\", \n        technical_description: 'Front View' \n      };\n  }\n}\n\n// Logique de type (Vêtement vs Objet Custom)\nfunction getTypeInfo(type) {\n  switch(type) {\n    case 'echarpe': return { category: 'accessory', placement: 'draped around neck', focus: 'texture and pattern' };\n    case 'pull': return { category: 'top', placement: 'worn on upper body', focus: 'knit texture' };\n    case 'tshirt': return { category: 'top', placement: 'casual upper body', focus: 'fabric drape' };\n    case 'chemise': return { category: 'top', placement: 'buttoned, collar visible', focus: 'collar, buttons' };\n    case 'veste': return { category: 'outerwear', placement: 'worn open', focus: 'structure, lapels' };\n    case 'manteau': return { category: 'outerwear', placement: 'full length', focus: 'silhouette' };\n    case 'pantalon': return { category: 'bottom', placement: 'full length lower body', focus: 'waist fit, leg line' };\n    case 'jean': return { category: 'bottom', placement: 'casual stance', focus: 'denim texture' };\n    case 'short': return { category: 'bottom', placement: 'thigh length', focus: 'fit and proportion' };\n    case 'jupe': return { category: 'bottom', placement: 'movement captured', focus: 'flow, silhouette' };\n    case 'robe': return { category: 'dress', placement: 'full body elegant', focus: 'silhouette, fabric' };\n    case 'bonnet': return { category: 'accessory', placement: 'on head', focus: 'fit and texture' };\n    case 'casquette': return { category: 'accessory', placement: 'on head front', focus: 'shape' };\n    case 'sac': return { category: 'accessory', placement: 'held or shoulder', focus: 'shape, material' };\n    \n    // Cas par défaut pour objets inconnus\n    default: return { \n      category: 'custom', \n      placement: 'integrated naturally into the scene matching its function', \n      focus: 'realistic texture, lighting match and high fidelity details' \n    };\n  }\n}\n\nconst sizeInfo = getSizeInfo(sizeCode);\nconst typeInfo = getTypeInfo(garmentType);\n// --- NEW: Résolution de l'angle ---\nconst angleInfo = getAngleInfo(angleCode);\n\n// Construction des chemins de sortie\nconst primaryInputPath = inputFilePaths[0];\nconst fileName = primaryInputPath.split('/').pop();\nconst dotIndex = fileName.lastIndexOf('.');\nconst nameWithoutExt = fileName.substring(0, dotIndex);\nconst outputPath = outputBasePath + nameWithoutExt + '_generated.png';\n\n// Génération du tableau de résultats\nconst results = [];\nfor (let i = 0; i < inputFilePaths.length; i++) {\n  const relativePath = inputFilePaths[i];\n  const fName = relativePath.split('/').pop();\n  const absolutePath = inputBasePath + fName;\n  const extIndex = fName.lastIndexOf('.');\n  const ext = fName.substring(extIndex + 1).toLowerCase();\n  \n  let mime = 'image/jpeg';\n  if (ext === 'png') mime = 'image/png';\n  else if (ext === 'webp') mime = 'image/webp';\n  \n  results.push({\n    json: {\n      jobId,\n      inputFilePaths,\n      imagePath: absolutePath,\n      imageIndex: i,\n      totalImages: inputFilePaths.length,\n      mimeType: mime,\n      outputPath,\n      productName,\n      garmentType,\n      sizeCode,\n      // --- NEW: Passage des données de l'angle au node suivant ---\n      angleCode, \n      angleInfo,\n      sizeInfo,\n      typeInfo,\n      customPrompt,\n      discordMessageId: job.discord_message_id,\n      userId: job.user_id\n    }\n  });\n}\n\nreturn results;"
+      },
+      "id": "8941ee5c-33d6-447f-8260-692e9a42dabe",
+      "name": "🏷️ Parse Job Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1632,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst { productName, garmentType, sizeInfo, typeInfo, customPrompt } = data;\n\nlet prompt;\n\n// LOGIQUE CHIRURGICALE :\n// Si l'objet est 'custom' (inconnu), on remplace \"GARMENT\" par \"ITEM\" dans le prompt.\nconst itemLabel = (typeInfo.category === 'custom') ? 'ITEM' : 'GARMENT';\n\nif (customPrompt && customPrompt.trim() !== '') {\n  // Cas 1 : Prompt utilisateur manuel (Priorité absolue)\n  prompt = `${customPrompt}\\n\\nAdditional context:\\n- Product: ${productName.replace(/_/g, ' ')}\\n- Type: ${garmentType}\\n- Model size: ${sizeInfo.label} (${sizeInfo.bodyDescription})\\n\\nKeep original design and colors. Professional e-commerce style.`;\n} else {\n  // Cas 2 : Génération automatique (Standard ou Objet Custom)\nprompt = `\n--- VISUAL SPECIFICATION SHEET ---\nTARGET: Luxury E-Commerce Asset (NET-A-PORTER Aesthetic)\nANCHOR_REFERENCE: Attached Image (Source of Truth for Design & Color)\n\n1. [SUBJECT SPECIFICATIONS]\n   - Model Entity: Realistic ${$('Postgres Trigger').first().json.payload.genre} model.\n   - Body Metrics: ${sizeInfo.bodyDescription}, ${sizeInfo.label}.\n   - Item Identification: ${garmentType}.\n   - Interaction/Fit: ${itemLabel}: ${typeInfo.placement}. The item must sit naturally on the body.\n   - Visual Focus: ${typeInfo.focus}.\n\n2. [SCENE & PHYSICS]\n   - Environment: A realistic gray cyclorama wall.\n   - Lighting: Soft large softbox lighting creating smooth gradients.\n   - Physics: Fabric must drape naturally, respecting gravity.\n\n3. [HARD CONSTRAINTS]\n   - CONSTRAINT: Head and face are STRICTLY out of frame (Neck-down crop).\n   - CONSTRAINT: Body orientation must ${$input.first().json.angleInfo.prompt}.\n   - CONSTRAINT: Do not alter the product's design, color, or texture. The Anchor is the absolute truth.\n\n4. [TECHNICAL CONFIGURATION]\n   - Camera: 85mm Lens (Flattering portrait compression).\n   - Framing: Frame starts strictly below the jawline.\n   - Style: Photorealistic, 4K resolution, sharp textures.\n--- END SPEC ---\n`}\n\nreturn [{ json: { ...data, prompt } }];"
+      },
+      "id": "8bfc31aa-74cc-417c-afb0-973a6d6f5fc3",
+      "name": "✨ Generate Prompt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1232,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first().json;\nconst { productName, garmentType, sizeInfo, typeInfo, customPrompt } = data;\n\nlet prompt;\n\n// LOGIQUE CHIRURGICALE :\n// Si l'objet est 'custom' (inconnu), on remplace \"GARMENT\" par \"ITEM\" dans le prompt.\nconst itemLabel = (typeInfo.category === 'custom') ? 'ITEM' : 'GARMENT';\n\nif (customPrompt && customPrompt.trim() !== '') {\n  // Cas 1 : Prompt utilisateur manuel (Priorité absolue)\n  prompt = `${customPrompt}\\n\\nAdditional context:\\n- Product: ${productName.replace(/_/g, ' ')}\\n- Type: ${garmentType}\\n- Model size: ${sizeInfo.label} (${sizeInfo.bodyDescription})\\n\\nKeep original design and colors. Professional e-commerce style.`;\n} else {\n  // Cas 2 : Génération automatique (Standard ou Objet Custom)\n  prompt = `Transform this product photo into a professional e-commerce image.\\n\\nTASK: Place this ${garmentType} (${productName.replace(/_/g, ' ')}) on a realistic human model.\\n\\nMODEL: ${sizeInfo.bodyDescription}, ${sizeInfo.label}, natural relaxed pose, photorealistic.\\n\\n${itemLabel}: ${typeInfo.placement}. Focus on ${typeInfo.focus}. Keep original design and colors.\\n\\nSTYLE: Professional studio lighting, very smooth light grey studio wall backdrop, high-resolution, luxury e-commerce (NET-A-PORTER style).`;\n}\n\nreturn [{ json: { ...data, prompt } }];"
+      },
+      "id": "9d950e65-9738-4bc0-b868-22fe06dfcdc1",
+      "name": "✨ Generate Prompt1",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1024,
+        -80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "image",
+        "operation": "edit",
+        "prompt": "={{ $('✨ Generate Prompt').item.json.prompt }}",
+        "images": {
+          "values": [
+            {}
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        -112
+      ],
+      "id": "359379f2-133a-4758-bc74-45de3deb3b43",
+      "name": "Edit an image",
+      "alwaysOutputData": true,
+      "executeOnce": false,
+      "retryOnFail": true,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "IqYdEsPjSFaKci3k",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "🔍 Filter Pending": {
+      "main": [
+        [
+          {
+            "node": "📝 Update Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📷 Read Image": {
+      "main": [
+        [
+          {
+            "node": "📦 Prepare API Body",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📦 Prepare API Body": {
+      "main": [
+        [
+          {
+            "node": "🎨 OpenRouter Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🖼️ Extract Image": {
+      "main": [
+        [
+          {
+            "node": "💾 Save Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✅ Update Done": {
+      "main": [
+        [
+          {
+            "node": "📊 Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "⚠️ Prepare Error": {
+      "main": [
+        [
+          {
+            "node": "❌ Update Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "💾 Save Output": {
+      "main": [
+        [
+          {
+            "node": "✅ Update Done",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Trigger": {
+      "main": [
+        [
+          {
+            "node": "🔍 Filter Pending",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "🏷️ Parse Job Data": {
+      "main": [
+        [
+          {
+            "node": "✨ Generate Prompt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✨ Generate Prompt": {
+      "main": [
+        [
+          {
+            "node": "📷 Read Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "✨ Generate Prompt1": {
+      "main": [
+        []
+      ]
+    },
+    "Edit an image": {
+      "main": [
+        []
+      ]
+    },
+    "🎨 OpenRouter Image": {
+      "main": [
+        [
+          {
+            "node": "🖼️ Extract Image",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "📝 Update Processing": {
+      "main": [
+        [
+          {
+            "node": "🏷️ Parse Job Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "staticData": null,
+  "meta": null,
+  "pinData": {},
+  "versionId": "e183c50c-89a8-47f6-b70b-c09c5272736d",
+  "versionCounter": 241,
+  "triggerCount": 1,
+  "tags": [],
+  "shared": [
+    {
+      "updatedAt": "2026-01-08T14:36:45.419Z",
+      "createdAt": "2026-01-08T14:36:45.419Z",
+      "role": "workflow:owner",
+      "workflowId": "emFvQESqlf4RPN6Q",
+      "projectId": "222pOUwFcLbeiYUL",
+      "project": {
+        "updatedAt": "2025-12-28T20:49:43.370Z",
+        "createdAt": "2025-12-28T15:53:12.406Z",
+        "id": "222pOUwFcLbeiYUL",
+        "name": "Skeeder skeeder <skeeder49@gmail.com>",
+        "type": "personal",
+        "icon": null,
+        "description": null
+      }
+    }
+  ]
+}

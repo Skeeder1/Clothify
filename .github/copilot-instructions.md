@@ -10,7 +10,7 @@ These instructions apply to all Copilot-generated code and edits in this reposit
 
 ### Architecture
 - **3-tier microservices:** Discord Bot (Python) ↔ PostgreSQL ↔ n8n (workflow orchestrator)
-- **Data flow:** Discord → Bot → DB → n8n → Google Gemini API → DB → Bot → Discord
+- **Data flow:** Discord → Bot → DB → n8n → OpenRouter API → DB → Bot → Discord
 - **Push-based:** PostgreSQL NOTIFY/LISTEN triggers instant job processing (no polling between DB and n8n)
 - **File sharing:** Shared volumes between bot and n8n for image storage
 
@@ -18,7 +18,8 @@ These instructions apply to all Copilot-generated code and edits in this reposit
 - **Bot:** Python 3.11+, `discord.py` (async), `asyncpg` (async PostgreSQL driver)
 - **Database:** PostgreSQL 16 with native NOTIFY/LISTEN, UUIDs, ENUMs, triggers
 - **Workflow:** n8n (self-hosted) with PostgreSQL Trigger nodes
-- **AI:** Google Gemini API (originally designed for Banana.dev)
+- **AI:** OpenRouter (`openai/gpt-5-image-mini`). The call lives in the n8n
+  workflow, never in `bot/`. See `docs/IMAGE_GENERATION.md`.
 - **Runtime:** Docker Compose (local) or Coolify (production)
 
 ### Key Data Models
@@ -30,7 +31,7 @@ These instructions apply to all Copilot-generated code and edits in this reposit
 1. User uploads image in Discord → Bot saves to `./images/input/`
 2. Bot inserts job with `status='pending'` → PostgreSQL trigger fires NOTIFY
 3. n8n receives instant notification → Updates `status='processing'`
-4. n8n reads input, calls Gemini API, saves output to `./images/output/`, calls `complete_job()`
+4. n8n reads input, calls OpenRouter, saves output to `./images/output/`, calls `complete_job()`
 5. Bot polls job status every 5s → Detects completion → Sends result to Discord
 
 ---

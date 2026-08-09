@@ -1,6 +1,20 @@
-# Clothify - Virtual Try-On Service
+# Clothify — Virtual Try-On Service
 
-Discord bot + n8n workflow orchestrator for generating professional e-commerce product visuals powered by Google Gemini AI.
+Discord bot + n8n workflow orchestrator that turns a photo of a garment into a
+professional e-commerce product visual, powered by image models served through
+[OpenRouter](https://openrouter.ai).
+
+## ✨ Results
+
+The user uploads a flat photo of a garment; the pipeline returns a model wearing it.
+
+| Input (uploaded to Discord) | Generated output |
+|---|---|
+| <img src="docs/images/exemple-pull-source.jpg" width="240"> | <img src="docs/images/exemple-pull-openrouter.jpg" width="240"> |
+
+<img src="docs/images/exemple-maillot-openrouter.jpg" width="320">
+
+*Generated with `openai/gpt-5-image-mini` — 1024×1024, ~50 s, ~$0.05 per image.*
 
 ## 🚀 Quick Start
 
@@ -8,19 +22,23 @@ Discord bot + n8n workflow orchestrator for generating professional e-commerce p
 - Docker & Docker Compose
 - Python 3.11+
 - Discord Bot Token ([Get one here](https://discord.com/developers/applications))
-- Google AI API Key ([Get one here](https://aistudio.google.com/apikey))
+- OpenRouter API Key ([Get one here](https://openrouter.ai/keys))
 
 ### Installation
 
 ```bash
 # 1. Clone and setup environment
 cp .env.example .env
-nano .env  # Configure DISCORD_TOKEN, GOOGLE_AI_API_KEY, etc.
+nano .env  # Configure DISCORD_TOKEN, POSTGRES_*, SHARED_VOLUME_PATH, etc.
 
 # 2. Start infrastructure (PostgreSQL + n8n)
 make start
 
-# 3. Start Discord bot
+# 3. Import the n8n workflow and its credential
+#    The OpenRouter key is stored as an n8n credential, NOT as an env var.
+#    See docs/IMAGE_GENERATION.md §3.
+
+# 4. Start Discord bot
 make start_bot
 ```
 
@@ -60,24 +78,53 @@ make setup-bot      # Install/update bot dependencies
 
 # Database
 psql postgresql://postgres:postgres@localhost:5432/clothify
+
+# End-to-end test, bypassing Discord entirely.
+# Inserts a single job and waits for the output file.
+# ⚠ consumes API credit (~$0.05 per run)
+bash scripts/e2e_test.sh <source_image> <garment> <genre> <size> <timeout_s>
 ```
-
-## 📚 Documentation
-
-- **System Architecture:** [docs/SYSTEM_ARCHITECTURE.md](docs/SYSTEM_ARCHITECTURE.md) - Complete technical overview
-- **Configuration Guide:** [docs/CONFIGURATION.md](docs/CONFIGURATION.md) - Environment setup and config management
-- **Production Deployment:** [docs/PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md) - Coolify deployment guide
-- **Database Guide:** [Database/GUIDE_ACCES.md](Database/GUIDE_ACCES.md) - PostgreSQL connection details
-- **n8n Workflows:** [n8n/workflows/README.md](n8n/workflows/README.md) - Workflow documentation
 
 ## 🔧 Architecture
 
-**3-tier microservices:**
-- **Discord Bot** (Python/asyncpg) - User interface and job orchestration
-- **PostgreSQL 16** - Job queue with NOTIFY/LISTEN triggers
-- **n8n** - Workflow engine for AI processing
+**3-tier, decoupled through the database:**
+- **Discord Bot** (Python/asyncpg) — user interface and job orchestration
+- **PostgreSQL 16** — job queue with NOTIFY/LISTEN triggers
+- **n8n** — workflow engine; **this is where the image model is called**
 
-**Data flow:** Discord → Bot → PostgreSQL (NOTIFY) → n8n → Google Gemini API → PostgreSQL → Bot → Discord
+**Data flow:** Discord → Bot → PostgreSQL (NOTIFY) → n8n → OpenRouter → PostgreSQL → Bot → Discord
+
+The bot never calls an image API. It writes a job row and polls for
+`status = 'done'`. Swapping the AI provider requires no change to the Python
+code — only to the n8n workflow.
+
+## 📦 What lives in this repository
+
+Everything needed to rebuild the system, including the parts that normally only
+exist inside running containers:
+
+| Path | Contents |
+|---|---|
+| `bot/` | Discord bot source (Python) |
+| `n8n/workflows/*.json` | **Exported n8n workflows** — the generation logic |
+| `Database/clothify_schema.sql` | **Real schema dump**: tables, enums, NOTIFY trigger |
+| `Database/clothify_schema.dbml` | Same schema as an ER diagram source |
+| `scripts/e2e_test.sh` | End-to-end test that bypasses Discord |
+| `docs/` | Technical documentation |
+
+> n8n workflows live in n8n's own database, so they are **not** version-controlled
+> by default. After changing a workflow, re-export it:
+> `n8n export:workflow --all --output=n8n/workflows/`
+
+## 📚 Documentation
+
+- **Agent instructions:** [AGENTS.md](AGENTS.md) — start here when working on the repo
+- **Image generation pipeline:** [docs/IMAGE_GENERATION.md](docs/IMAGE_GENERATION.md) — API contract, costs, failure modes
+- **System Architecture:** [docs/SYSTEM_ARCHITECTURE.md](docs/SYSTEM_ARCHITECTURE.md) - Complete technical overview
+- **Configuration Guide:** [docs/CONFIGURATION.md](docs/CONFIGURATION.md) - Environment setup and config management
+- **Production Deployment:** [docs/PRODUCTION_DEPLOYMENT.md](docs/PRODUCTION_DEPLOYMENT.md) - Coolify deployment guide
+- **Database Guide:** [Database/GUIDE_ACCES_local_database.md](Database/GUIDE_ACCES_local_database.md) - PostgreSQL connection details
+- **n8n Workflows:** [n8n/workflows/README.md](n8n/workflows/README.md) - Workflow documentation
 
 ## 🤖 AI Agents
 

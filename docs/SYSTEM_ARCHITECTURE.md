@@ -1,5 +1,13 @@
 # Clothify - System Architecture Documentation
 
+> **⚠️ Document partiellement obsolète — mis à jour le 2026-08-09.**
+> Ce document décrit encore la génération d'images via **Google Gemini**. Le
+> projet est passé à **OpenRouter** (`openai/gpt-5-image-mini`). Tout ce qui
+> touche à l'appel du modèle — endpoint, format de requête et de réponse,
+> authentification, coûts, modes de défaillance — est décrit à jour dans
+> [IMAGE_GENERATION.md](IMAGE_GENERATION.md).
+> Le reste de ce document (architecture, base de données, déploiement) reste valable.
+
 **Version:** 1.0  
 **Date:** January 5, 2026  
 **Purpose:** Knowledge Base for AI Agents & Development Team
@@ -54,46 +62,66 @@
 1. UPLOAD
    User posts image(s) in #bot_clothify channel on Discord
    ↓
-2. INTERACTIVE SELECTION
-   Bot presents dropdown menu with 15 garment types
-   User selects (e.g., "tshirt", "pull", "robe")
+2. INTERACTIVE SELECTION - GARMENT
+   Bot presents dropdown menu with 15 predefined garment types
+   User selects from dropdown OR chooses "Autre" (opens text modal for custom entry)
+   Selected garment type stored as TEXT (e.g., "tshirt", "pull", "robe", or custom text)
+   Garment selection message is deleted after user interaction
    ↓
-   Bot presents size selection buttons
-   User selects size: 1 (Petit), 2 (Standard), 3 (Moyen), 4 (Grand)
+3. INTERACTIVE SELECTION - GENRE
+   Bot presents gender selection buttons (ephemeral message - visible only to user)
+   User selects: "Homme" (man) or "Femme" (woman)
    ↓
-3. JOB CREATION
-   Bot saves image(s) to ./images/input/
+4. INTERACTIVE SELECTION - ANGLE
+   Bot presents angle selection buttons (ephemeral message)
+   User selects: Face, Profil, Dos, or Trois-quarts face
+   ↓
+5. INTERACTIVE SELECTION - SIZE
+   Bot presents size selection buttons (ephemeral message)
+   User selects size: 1 (Petit), 2 (Moyen), 3 (Grand), 4 (Très Grand)
+   ↓
+6. JOB CREATION
+   Bot saves image(s) to /clothify_shared/input_image/
    Generates unique 6-char product ID (e.g., "A3X7K2")
-   Creates database record with status='pending'
+   Creates database record with status='pending', garment, genre, angle, and size
    Adds ⏳ reaction to original message
+   Shows confirmation message with all selections
    ↓
-4. REAL-TIME TRIGGER
+7. REAL-TIME TRIGGER
    PostgreSQL trigger fires NOTIFY event
    n8n receives instant notification via LISTEN channel
    ↓
-5. AI PROCESSING
+8. AI PROCESSING
    n8n updates job status to 'processing'
-   Reads input image from shared volume
-   Calls Google Gemini API for generation
-   Saves output to ./images/output/
+   Reads input image from /clothify_shared/input_image/
+   Calls Google Gemini API for generation with genre and angle parameters
+   Saves output to /clothify_shared/output_image/
    Calls complete_job() database function
    ↓
-6. POLLING & DELIVERY
+9. POLLING & DELIVERY
    Bot polls job status every 5 seconds (max 120s timeout)
    Detects output_file_path populated
-   Reads generated image from ./images/output/
-   Posts result to Discord thread/channel
+   Reads generated image from /clothify_shared/output_image/
+   Posts result to Discord channel (direct image, no text)
+   Deletes original user message (clean channel)
    Updates job status to 'sent'
    Replaces ⏳ with ✅ reaction
 ```
 
 ### Workflow Timing
 
-- **User Interaction:** ~10-30 seconds (upload + selections)
+- **User Interaction:** ~20-45 seconds (upload + 4 sequential selections: garment, genre, angle, size)
 - **Queue Trigger:** <100ms (PostgreSQL NOTIFY is near-instant)
 - **AI Generation:** Variable (typically 15-60 seconds depending on Gemini API)
 - **Polling Detection:** 0-5 seconds (bot checks every 5s)
-- **Total Time:** ~30-90 seconds from upload to delivery
+- **Total Time:** ~40-120 seconds from upload to delivery
+
+### UX Enhancements
+
+- **Ephemeral Messages:** Genre, angle, and size selections are ephemeral (visible only to requester)
+- **Message Cleanup:** Garment selection message deleted after user interaction
+- **Channel Cleanliness:** Original user message deleted after result delivery
+- **Privacy:** Only final generated image remains in channel
 
 ---
 
@@ -203,13 +231,16 @@ python-dotenv>=1.0.0
 
 **Responsibilities:**
 1. Listen to Discord gateway events
-2. Validate and save uploaded attachments
-3. Present interactive UI for garment/size selection
-4. Create job records in database
-5. Poll database for job completion
-6. Convert Docker paths to host paths
-7. Send generated images to Discord
-8. Update job statuses (sent, error, timeout)
+2. Validate and save uploaded attachments to shared volume
+3. Present interactive UI for garment selection (dropdown + custom modal for "Autre")
+4. Present interactive UI for genre selection (Homme/Femme buttons, ephemeral)
+5. Present interactive UI for angle selection (Face/Profil/Dos/Trois-quarts face buttons, ephemeral)
+6. Present interactive UI for size selection (4 size options, ephemeral)
+7. Create job records in database with garment, genre, angle, and size
+8. Poll database for job completion
+9. Send generated images to Discord channel
+10. Clean up UI (delete garment selection message, delete original user message)
+11. Update job statuses (sent, error, timeout)
 
 **Communication:**
 - **Inbound:** Discord Gateway (WebSocket)
@@ -299,7 +330,9 @@ erDiagram
         text input_file_paths
         text output_file_path
         varchar product_name UK
-        garment_type garment
+        text garment
+        varchar genre
+        varchar angle
         size_code size
         job_status status
         integer attempts
@@ -353,7 +386,9 @@ Core job queue table tracking all Virtual Try-On requests.
 | `input_file_paths` | TEXT | NOT NULL | JSON array string of input paths |
 | `output_file_path` | TEXT | - | Generated image path (Docker format) |
 | `product_name` | VARCHAR(255) | UNIQUE, NOT NULL | 6-char alphanumeric ID |
-| `garment` | garment_type | NOT NULL | Selected garment type |
+| `garment` | TEXT | NOT NULL | Garment type (free text or predefined) |
+| `genre` | VARCHAR(10) | - | Gender selection: "man" or "woman" |
+| `angle` | VARCHAR(50) | - | View angle: "face", "profil", "dos", "trois-quarts face" |
 | `size` | size_code | NOT NULL | Selected size (1-4) |
 | `status` | job_status | DEFAULT 'pending' | Current state |
 | `attempts` | INTEGER | DEFAULT 0 | Retry counter |
@@ -401,15 +436,18 @@ CREATE TYPE job_status AS ENUM (
 );
 ```
 
-#### `garment_type`
+#### `garment_type` (DEPRECATED)
 
-```sql
-CREATE TYPE garment_type AS ENUM (
-    'echarpe', 'pull', 'tshirt', 'chemise', 'veste', 
-    'manteau', 'pantalon', 'jean', 'short', 'jupe', 
-    'robe', 'bonnet', 'casquette', 'sac', 'other'
-);
+> **Note:** As of Q1 2026, the `garment` column has been migrated from ENUM to TEXT type to allow flexible custom garment entries via modal input.
+
+**Predefined/Suggested Values** (presented in UI dropdown):
 ```
+'echarpe', 'pull', 'tshirt', 'chemise', 'veste',
+'manteau', 'pantalon', 'jean', 'short', 'jupe',
+'robe', 'bonnet', 'casquette', 'sac', 'other'
+```
+
+**Custom Values:** Users can enter any text via the "Autre" (Other) option which opens a modal for free-text input. This provides flexibility for new garment types without requiring database migrations.
 
 #### `size_code`
 
@@ -521,76 +559,99 @@ CREATE TRIGGER trg_n8n_new_job
 
 ## File Storage & Volume Management
 
+### Unified Volume Architecture
+
+**Key Design Decision:** As of Q1 2026, Clothify uses a **single unified shared volume** (`clothify_shared`) across all environments (local and production). This eliminates path translation complexity and ensures consistent behavior.
+
 ### Directory Structure
 
 ```
 /home/luffy/Github/Clothify/
-├── images/                         # Shared volume root
-│   ├── input/                      # User-uploaded images
-│   │   └── (dynamic files)         # e.g., tshirt_1.jpg
-│   └── output/                     # AI-generated images
-│       └── (dynamic files)         # e.g., A3X7K2.jpg
 ├── bot/                            # Bot service code
 ├── Database/scripts/init/          # SQL init scripts
 ├── n8n/workflows/                  # Workflow definitions (JSON)
-├── docker-compose.yml              # Local orchestration
-└── .env                            # Local environment config
+├── docker-compose.yml              # Orchestration configuration
+└── .env                            # Environment-specific secrets
+```
+
+**Shared Volume Structure (inside containers):**
+```
+/clothify_shared/
+├── input_image/                    # User-uploaded images
+│   └── (dynamic files)             # e.g., tshirt_1.jpg, shirt_2.png
+└── output_image/                   # AI-generated images
+    └── (dynamic files)             # e.g., A3X7K2.jpg
 ```
 
 ### Volume Mappings
 
-#### Local Development
+#### Unified Architecture (Local & Production)
 
-| Service | Container Path | Host Path | Purpose |
-|---------|----------------|-----------|---------|
-| Bot | N/A (runs on host) | `./images/input/` | Write uploads |
-| Bot | N/A (runs on host) | `./images/output/` | Read results |
-| n8n | `/files/input/` | `./images/input/` | Read uploads |
-| n8n | `/files/output/` | `./images/output/` | Write results |
-| postgres | `/docker-entrypoint-initdb.d` | `./Database/scripts/init/` | Schema init |
+| Service | Container Path | Volume | Purpose |
+|---------|----------------|--------|---------|
+| Bot | `/clothify_shared` | `clothify_shared` (named volume) | Read/write images |
+| n8n | `/clothify_shared` | `clothify_shared` (named volume) | Read/write images |
+| postgres | `/docker-entrypoint-initdb.d` | `./Database/scripts/init/` (bind mount) | Schema initialization |
 | postgres | `/var/lib/postgresql/data` | `postgres-data` (named volume) | Data persistence |
 | n8n | `/home/node/.n8n` | `n8n-data` (named volume) | Workflow storage |
 
-#### Production (Coolify)
+**Docker Compose Configuration:**
+```yaml
+services:
+  bot:
+    volumes:
+      - clothify_shared:/clothify_shared
+    environment:
+      - SHARED_VOLUME_PATH=/clothify_shared
 
-| Service | Container Path | Coolify Volume | Purpose |
-|---------|----------------|----------------|---------|
-| Bot | `/app/images/input/` | Coolify persistent volume | Write uploads |
-| Bot | `/app/images/output/` | Coolify persistent volume | Read results |
-| n8n | `/files/input/` | Coolify persistent volume | Read uploads |
-| n8n | `/files/output/` | Coolify persistent volume | Write results |
-| postgres | `/var/lib/postgresql/data` | Coolify database volume | Data persistence |
-| n8n | `/home/node/.n8n` | Coolify app volume | Workflow storage |
+  n8n:
+    volumes:
+      - clothify_shared:/clothify_shared
 
-> **Note:** In production, Coolify manages volume creation and binding automatically via its UI.
+volumes:
+  clothify_shared:    # Single shared volume for images
+  postgres-data:      # Database persistence
+  n8n-data:          # Workflow storage
+```
+
+**Benefits of Unified Architecture:**
+- ✅ No path translation needed
+- ✅ Identical behavior in local and production
+- ✅ Simplified configuration management
+- ✅ Reduced chance of path-related bugs
 
 ---
 
-### Path Translation
+### Path Configuration
 
-#### Bot Path Converter
+#### Environment Variable
 
-**Function:** `docker_to_host_path()` in `bot/utils/files.py`
+All paths are derived from `SHARED_VOLUME_PATH`:
 
-**Purpose:** Convert n8n's Docker-internal paths to bot-accessible paths
-
-**Example:**
-```python
-# n8n saves: /files/output/A3X7K2.jpg (inside container)
-# Database stores: /files/output/A3X7K2.jpg
-# Bot converts to: ./images/output/A3X7K2.jpg (host filesystem)
-
-docker_path = "/files/output/A3X7K2.jpg"
-host_path = docker_to_host_path(docker_path)
-# Result: "./images/output/A3X7K2.jpg"
+```bash
+# .env or Coolify Environment Variables
+SHARED_VOLUME_PATH=/clothify_shared
 ```
 
-**Local Logic:**
-- Strip `/files/` prefix
-- Prepend `./images/`
+#### Bot Configuration
 
-**Production Logic:** (Handled by Coolify volume mounts)
-- All services see consistent paths via shared persistent volume
+**File:** `bot/config.py`
+
+```python
+shared_volume_path = os.getenv('SHARED_VOLUME_PATH', '/clothify_shared')
+input_dir = f"{shared_volume_path}/input_image"
+output_dir = f"{shared_volume_path}/output_image"
+```
+
+**Result:**
+- Input images: `/clothify_shared/input_image/`
+- Output images: `/clothify_shared/output_image/`
+
+#### n8n Workflow Paths
+
+n8n workflows access the same volume:
+- Read input: `/clothify_shared/input_image/`
+- Write output: `/clothify_shared/output_image/`
 
 ---
 
@@ -622,14 +683,14 @@ SUPPORTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp']
 | **Host Machine** | PC Personnel (Developer laptop/desktop) | Debian Server (Home Lab) |
 | **Orchestration** | `docker-compose` (manual) | Coolify (Web UI) |
 | **Network Type** | Docker bridge (default) | Coolify-managed Docker network |
-| **Bot Deployment** | Runs on host (`python bot/main.py`) | Dockerized via Coolify |
-| **Database Access** | `localhost:5432` (port mapping) | Internal DNS (`postgres:5432`) or Coolify service name |
-| **n8n Access** | `localhost:5678` (port mapping) | Internal DNS (`n8n:5678`) or Coolify service name |
-| **Configuration Source** | `.env` file in project root | Coolify UI (Environment Variables section) |
-| **Volume Storage** | Host filesystem (`./images/`) | Coolify persistent volumes (managed) |
-| **External Access** | Not exposed (local only) | Tailscale VPN (100.x.x.x private IPs) |
-| **Port Exposure** | Public ports mapped (5432, 5678) | NO public ports (Tailscale mesh only) |
-| **Service Discovery** | Hostname in `.env` (e.g., `postgres`, `localhost`) | Coolify internal DNS |
+| **Bot Deployment** | Dockerized via docker-compose | Dockerized via Coolify |
+| **Database Access** | `postgres:5432` (internal DNS) | Internal DNS (`postgres:5432`) or Coolify service name |
+| **n8n Access** | `n8n:5678` or `localhost:5678` (port mapping) | Internal DNS (`n8n:5678`) or Coolify service name |
+| **Configuration Source** | `.env` + `config.yaml` in project root | Coolify UI (Environment Variables) + `config.yaml` |
+| **Volume Storage** | `clothify_shared` named volume | Coolify persistent volumes (managed) |
+| **External Access** | `localhost` ports (5432, 5678) | Tailscale VPN (100.x.x.x private IPs) |
+| **Port Exposure** | Public ports mapped for development | NO public ports (Tailscale mesh only) |
+| **Service Discovery** | Docker internal DNS (`postgres`, `n8n`) | Coolify internal DNS |
 | **Secrets Management** | `.env` file (not committed to git) | Coolify encrypted environment variables |
 | **Log Access** | `docker-compose logs -f` | Coolify Web UI (Logs tab) |
 | **Restart Strategy** | Manual (`docker-compose restart`) | Automatic (Coolify health checks + restarts) |
@@ -786,25 +847,35 @@ SUPPORTED_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp']
 ```bash
 # Discord Configuration
 DISCORD_TOKEN=<bot_token_from_discord_dev_portal>
+DISCORD_CHANNEL_NAME=bot_clothify              # Optional, default: bot_clothify
+DISCORD_GUILD_ID=<your_guild_id>               # Optional
 
 # Database Connection
 DATABASE_URL=postgresql://<user>:<password>@<host>:<port>/<database>
-# Example (local): postgresql://postgres:postgres@localhost:5432/clothify
+# Example (local): postgresql://postgres:postgres@postgres:5432/clothify
 # Example (prod):  postgresql://postgres:postgres@postgres:5432/clothify
 
-# File Paths
-INPUT_DIR=./images/input    # Local path (bot reads/writes here)
-OUTPUT_DIR=./images/output  # Local path (bot reads generated images)
+# Shared Volume Path (Unified Architecture)
+SHARED_VOLUME_PATH=/clothify_shared            # Container path to shared volume
+# Bot automatically derives:
+#   - Input images:  ${SHARED_VOLUME_PATH}/input_image/
+#   - Output images: ${SHARED_VOLUME_PATH}/output_image/
 
-# Job Polling Configuration
+# Job Polling Configuration (loaded from config.yaml, can be overridden)
 WATCH_INTERVAL=5            # Seconds between job status checks
 WATCH_TIMEOUT=120           # Max seconds to wait for job completion
 ```
 
+**Configuration Architecture:**
+- **config.yaml** - Universal settings (committed to Git)
+- **.env** - Environment-specific secrets and overrides (not committed)
+- `bot/config.py` loads both YAML and dotenv, with .env taking precedence
+
 **Loading Mechanism:**
-- `bot/config.py` uses `python-dotenv` to load `.env`
-- Variables accessed via `os.getenv()`
-- Validation performed in `Config.validate()` method
+- `bot/config.py` uses `pyyaml` to load `config.yaml`
+- `python-dotenv` loads `.env` for secrets
+- Variables accessed via `Config` class attributes
+- Automatic path derivation: `input_dir = f"{shared_volume_path}/input_image"`
 
 ---
 
@@ -1031,36 +1102,35 @@ cd Clothify
 cp .env.example .env
 nano .env  # Edit with your tokens and config
 
-# 3. Start Docker services
+# 3. Start Docker services (includes bot, postgres, n8n)
 docker-compose up -d
 
 # 4. Verify services
 docker-compose ps
 docker-compose logs -f postgres  # Check database initialization
 docker-compose logs -f n8n       # Check n8n startup
+docker-compose logs -f bot       # Check bot startup
 
-# 5. Access n8n UI
+# 5. Initialize database schema
+# NOTE: SQL schema files are not present in /Database/scripts/init/
+# Reference available: Database/clothify_schema.dbml
+# Manually create tables based on DBML schema or export from existing instance
+
+# 6. Access n8n UI
 open http://localhost:5678
 
-# 6. Import workflows
+# 7. Import workflows
 # Navigate to n8n UI → Workflows → Import from File
-# Select n8n/workflows/*.json
+# NOTE: Workflow JSON files must be exported manually or obtained from deployment
 
-# 7. Configure n8n credentials
+# 8. Configure n8n credentials
 # Add PostgreSQL credentials in n8n UI (Settings → Credentials)
+# Host: postgres, Port: 5432, Database: clothify
 # Add Google AI API key
 
-# 8. Install Python dependencies
-cd bot
-python3 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
-
-# 9. Run bot
-python main.py
-
-# 10. Test in Discord
-# Post an image in configured channel
+# 9. Test in Discord
+# Post an image in configured channel (#bot_clothify by default)
+# Follow interactive prompts: garment → genre → angle → size
 ```
 
 ---
@@ -1123,13 +1193,17 @@ docker-compose exec postgres psql -U postgres -d clothify -f /migrations/002_add
 
 **3. Run Database Initialization:**
 - Coolify → `clothify-db` → Terminal
+- **Note:** SQL initialization scripts are not present in repository
+- **Available reference:** `Database/clothify_schema.dbml` contains complete schema
+- **Recommended approach:**
+  - Export schema from existing working instance: `pg_dump -U postgres -d clothify --schema-only > schema.sql`
+  - Or manually create tables based on DBML specification
+  - Migration 005 (gender column) exists: `Database/scripts/migrations/005_add_gender_column.sql`
 - Execute:
   ```bash
   psql -U postgres -d clothify
-  \i /path/to/01-schema.sql  # Upload via Coolify file manager
-  \i /path/to/002_add_queue_system.sql
-  \i /path/to/003_add_n8n_notify_trigger.sql
-  \i /path/to/004_cleanup_polling_elements.sql
+  \i /path/to/exported_schema.sql
+  \i /path/to/005_add_gender_column.sql
   \q
   ```
 
@@ -1141,8 +1215,7 @@ docker-compose exec postgres psql -U postgres -d clothify -f /migrations/002_add
   - Image: `n8nio/n8n:latest`
   - Persistent Volumes:
     - `/home/node/.n8n` → Coolify managed volume
-    - `/files/input` → Shared volume (create new: `clothify-images-input`)
-    - `/files/output` → Shared volume (create new: `clothify-images-output`)
+    - `/clothify_shared` → Shared volume (create new: `clothify-shared`)
   - Environment Variables:
     - `N8N_ENCRYPTION_KEY`: `<generate-random-key>`
     - `GOOGLE_AI_API_KEY`: `<your-gemini-key>`
@@ -1168,15 +1241,15 @@ docker-compose exec postgres psql -U postgres -d clothify -f /migrations/002_add
 - Dockerfile Path: `bot/Dockerfile`
 - Build Context: `./bot`
 - Persistent Volumes:
-  - `/app/images/input` → Shared volume: `clothify-images-input` (same as n8n)
-  - `/app/images/output` → Shared volume: `clothify-images-output` (same as n8n)
+  - `/clothify_shared` → Shared volume: `clothify-shared` (same as n8n)
 - Environment Variables:
   - `DISCORD_TOKEN`: `<your-discord-bot-token>`
+  - `DISCORD_CHANNEL_NAME`: `bot_clothify` (optional)
+  - `DISCORD_GUILD_ID`: `<your-guild-id>` (optional)
   - `DATABASE_URL`: `postgresql://postgres:<password>@clothify-db:5432/clothify`
-  - `INPUT_DIR`: `/app/images/input`
-  - `OUTPUT_DIR`: `/app/images/output`
-  - `WATCH_INTERVAL`: `5`
-  - `WATCH_TIMEOUT`: `120`
+  - `SHARED_VOLUME_PATH`: `/clothify_shared`
+  - `WATCH_INTERVAL`: `5` (optional, from config.yaml)
+  - `WATCH_TIMEOUT`: `120` (optional, from config.yaml)
 - Deploy
 
 **7. Verify Deployment:**
@@ -1213,16 +1286,19 @@ docker exec clothify-db pg_dump -U postgres clothify > backup_$(date +%Y%m%d).sq
 | File Path | Purpose |
 |-----------|---------|
 | `bot/main.py` | Bot entry point, Discord client setup |
-| `bot/config.py` | Environment variable loader |
+| `bot/config.py` | Configuration management (YAML + dotenv) |
+| `bot/config.yaml` | Universal configuration settings (committed) |
 | `bot/database.py` | Database connection pool and query functions |
 | `bot/handlers/message.py` | Discord message event handlers |
-| `bot/handlers/views.py` | Interactive UI components (Select/Button) |
+| `bot/handlers/views.py` | Interactive UI components (Select/Button/Modal) |
 | `bot/handlers/tasks.py` | Background polling tasks |
 | `bot/utils/files.py` | File save/load utilities |
-| `Database/scripts/init/01-schema.sql` | Database schema initialization |
-| `Database/scripts/migrations/002_*.sql` | Database migration scripts |
-| `docker-compose.yml` | Local orchestration configuration |
-| `n8n/workflows/*.json` | n8n workflow definitions |
+| `Database/clothify_schema.dbml` | Database schema (DBML format) |
+| `Database/scripts/migrations/005_add_gender_column.sql` | Migration: Add genre column |
+| `docker-compose.yml` | Orchestration configuration (local) |
+| `n8n/workflows/README.md` | n8n workflow documentation |
+
+**Note:** SQL initialization scripts (`01-schema.sql`, etc.) are not present in repository. Use `clothify_schema.dbml` as reference or export from existing instance.
 
 ---
 
@@ -1258,9 +1334,14 @@ docker exec clothify-db pg_dump -U postgres clothify > backup_$(date +%Y%m%d).sq
 **Problem:** Images not found after generation
 
 **Solution:**
-- Verify path translation: `docker_to_host_path()` logic
-- Check volume mounts in `docker-compose.yml` or Coolify config
-- Ensure output directory exists and is writable
+- Verify `SHARED_VOLUME_PATH` environment variable is set correctly
+- Check volume mounts in `docker-compose.yml`: `clothify_shared:/clothify_shared`
+- Ensure directories exist inside container:
+  ```bash
+  docker exec clothify_bot ls -la /clothify_shared/input_image/
+  docker exec clothify_bot ls -la /clothify_shared/output_image/
+  ```
+- Verify permissions (bot container user must have write access)
 
 ---
 

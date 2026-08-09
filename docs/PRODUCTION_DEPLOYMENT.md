@@ -1,5 +1,13 @@
 # Guide de Transition LOCAL → PRODUCTION
 
+> **⚠️ Document partiellement obsolète — mis à jour le 2026-08-09.**
+> Ce document décrit encore la génération d'images via **Google Gemini**. Le
+> projet est passé à **OpenRouter** (`openai/gpt-5-image-mini`). Tout ce qui
+> touche à l'appel du modèle — endpoint, format de requête et de réponse,
+> authentification, coûts, modes de défaillance — est décrit à jour dans
+> [IMAGE_GENERATION.md](IMAGE_GENERATION.md).
+> Le reste de ce document (architecture, base de données, déploiement) reste valable.
+
 Ce guide explique comment adapter les variables d'environnement lors du déploiement sur Coolify.
 
 ## 📋 Variables à Modifier

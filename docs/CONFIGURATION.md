@@ -116,7 +116,9 @@ OUTPUT_IMAGES_PATH=/app/images/output
 
 #### API Keys
 ```bash
-GOOGLE_AI_API_KEY=your-google-ai-api-key
+# Note : la clé du modèle d'image n'est PAS une variable d'environnement.
+# Elle est stockée comme credential chiffrée dans n8n (« OpenRouter Clothify »).
+# Voir docs/IMAGE_GENERATION.md §3.
 N8N_ENCRYPTION_KEY=your-n8n-encryption-key
 ```
 
@@ -240,7 +242,7 @@ POSTGRES_PASSWORD=StrongPassword123!
 
 # Garder identiques :
 DISCORD_TOKEN=<identique>
-GOOGLE_AI_API_KEY=<identique>
+# (clé du modèle d'image : credential n8n, pas de variable ici)
 N8N_ENCRYPTION_KEY=<identique>
 
 # 3. Deploy
@@ -287,7 +289,7 @@ Commit → Push → Pull → Redeploy automatique
 
 **Via Coolify UI uniquement** (ou `.env` en local) :
 ```bash
-GOOGLE_AI_API_KEY=nouvelle-cle-api
+# (rotation de la clé image : se fait dans la credential n8n)
 ```
 
 Redeploy → Appliqué immédiatement
