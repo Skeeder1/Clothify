@@ -70,6 +70,37 @@ par-dessus le `done` posé par `✅ Update Done`. Le bot ne cherchant que
 | `🎨 OpenRouter Image` | l'appel HTTP | auth par credential, jamais `$env` |
 | `🖼️ Extract Image` | décode le base64 en binaire n8n | conserve le contrat `json` + `binary.data` |
 
+## 2 bis. Le prompt de génération
+
+Construit par `✨ Generate Prompt` sous forme de « fiche de spécification »
+(esthétique NET-A-PORTER), à partir des métadonnées du job. Points structurants :
+
+- **Angle de prise de vue paramétrable.** La colonne `angle` de la table `jobs`
+  (`face`, `profil`, `dos`, `trois-quarts face`) est résolue par
+  `🏷️ Parse Job Data` en une consigne caméra (`0° yaw`, `90° yaw`, …) injectée
+  dans le prompt. Auparavant la production figeait `three-quarter back (~130°
+  yaw)`, ce qui produisait des vues de dos quel que soit le choix de
+  l'utilisateur. Défaut : `face`.
+- **Fidélité des logos.** Une contrainte dure impose de reproduire *exactement*
+  les logos et textes imprimés — c'est le point faible mesuré des modèles image
+  sur du vêtement de marque.
+- **Anti-recopie d'interface.** Une contrainte demande d'extraire le vêtement de
+  son contexte et d'ignorer toute barre de statut, chrome d'application ou
+  watermark présent dans l'image source. Sans elle, un modèle peut reproduire
+  l'interface d'une capture d'écran d'app au lieu du seul vêtement.
+- **Tête hors cadre.** Cadrage systématique sous la mâchoire (`neck-down crop`),
+  visage jamais visible.
+
+La branche `customPrompt` (prompt libre fourni par l'utilisateur) reste
+prioritaire et n'applique aucune de ces contraintes automatiques.
+
+Les nœuds `🏷️ Parse Job Data` et `✨ Generate Prompt` forment un **couple** : le
+second lit `angleInfo`, produit uniquement par le premier. Modifier l'un sans
+l'autre casse le workflow (`Cannot read properties of undefined (reading
+'prompt')`).
+
+---
+
 ## 3. Contrat de l'API OpenRouter
 
 Endpoint : `POST https://openrouter.ai/api/v1/chat/completions`
