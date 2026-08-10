@@ -195,6 +195,30 @@ async def get_job_output(job_id: UUID) -> Optional[str]:
         return row["output_file_path"] if row else None
 
 
+async def get_job_status(job_id: UUID) -> Optional[tuple[str, Optional[str]]]:
+    """
+    Get the current status and error message of a job.
+
+    Used by the watch loop to surface n8n failures immediately instead of
+    waiting for the watch timeout.
+
+    Args:
+        job_id: Job UUID
+
+    Returns:
+        (status, error_message) tuple, or None if the job does not exist.
+    """
+    pool = await get_pool()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT status, error_message FROM jobs WHERE id = $1",
+            job_id
+        )
+        if not row:
+            return None
+        return row["status"], row["error_message"]
+
+
 async def update_job_status(job_id: UUID, status: str, message: Optional[str] = None) -> None:
     """
     Update job status.

@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-01-23T17:29:52.000Z",
+  "updatedAt": "2026-08-09T14:15:53.000Z",
   "createdAt": "2026-01-06T18:32:26.338Z",
   "id": "Qdtp2SCgNQ1SUE6K",
   "name": "production-Clothify-n8n",
@@ -358,7 +358,8 @@
         1248,
         -272
       ],
-      "alwaysOutputData": true
+      "alwaysOutputData": true,
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -651,7 +652,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Get the error and job ID from context\nconst errorMessage = $input.first().json?.error?.message || $execution?.error?.message || 'Unknown error during processing';\n\n// Try to get jobId from various possible sources\nlet jobId = null;\ntry {\n  jobId = $('🏷️ Parse Job Data2').item?.json?.jobId;\n} catch (e) {\n  try {\n    jobId = $('📝 Update Processing').item?.json?.id;\n  } catch (e2) {\n    try {\n      jobId = $('🔍 Filter Pending').item?.json?.id;\n    } catch (e3) {\n      // No job ID found\n    }\n  }\n}\n\nif (!jobId) {\n  throw new Error('Cannot update error status: no job ID found. Original error: ' + errorMessage);\n}\n\nreturn [{\n  json: {\n    jobId,\n    errorMessage: errorMessage.substring(0, 1000)\n  }\n}];"
+        "jsCode": "// Id du job : le trigger le porte toujours, quelle que soit l'étape qui a\n// échoué. C'est la source fiable (l'ancienne version visait un nœud inexistant).\nconst jobId = $('Postgres Trigger').first().json.payload.id;\n\n// Message : avec onError=continueErrorOutput, l'item d'erreur porte .error.\n// On tente plusieurs emplacements pour rester robuste selon le type d'échec.\nconst src = $input.first().json || {};\nconst e = src.error || {};\nconst msg =\n  e.message ||\n  e.description ||\n  (e.cause && e.cause.message) ||\n  src.message ||\n  'Unknown error during processing';\n\nif (!jobId) {\n  throw new Error('Cannot update error status: no job ID. Original error: ' + msg);\n}\n\nreturn [{\n  json: {\n    id: jobId,\n    errorMessage: String(msg).substring(0, 1000)\n  }\n}];"
       },
       "id": "2aa09bb2-972d-40c2-b7a4-81e453895df4",
       "name": "⚠️ Prepare Error",
@@ -678,10 +679,246 @@
         "columns": {
           "mappingMode": "defineBelow",
           "value": {
+            "id": "={{ $json.id }}",
             "status": "error",
             "error_message": "={{ $json.errorMessage }}",
             "completed_at": "={{ $now.toISO() }}"
-          }
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "user_id",
+              "displayName": "user_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "discord_message_id",
+              "displayName": "discord_message_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "custom_prompt",
+              "displayName": "custom_prompt",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "input_file_paths",
+              "displayName": "input_file_paths",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "output_file_path",
+              "displayName": "output_file_path",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "product_name",
+              "displayName": "product_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "garment",
+              "displayName": "garment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "other",
+                  "value": "other"
+                },
+                {
+                  "name": "sac",
+                  "value": "sac"
+                },
+                {
+                  "name": "casquette",
+                  "value": "casquette"
+                },
+                {
+                  "name": "bonnet",
+                  "value": "bonnet"
+                },
+                {
+                  "name": "robe",
+                  "value": "robe"
+                },
+                {
+                  "name": "jupe",
+                  "value": "jupe"
+                },
+                {
+                  "name": "short",
+                  "value": "short"
+                },
+                {
+                  "name": "jean",
+                  "value": "jean"
+                },
+                {
+                  "name": "pantalon",
+                  "value": "pantalon"
+                },
+                {
+                  "name": "manteau",
+                  "value": "manteau"
+                },
+                {
+                  "name": "veste",
+                  "value": "veste"
+                },
+                {
+                  "name": "chemise",
+                  "value": "chemise"
+                },
+                {
+                  "name": "tshirt",
+                  "value": "tshirt"
+                },
+                {
+                  "name": "pull",
+                  "value": "pull"
+                },
+                {
+                  "name": "echarpe",
+                  "value": "echarpe"
+                }
+              ],
+              "removed": true
+            },
+            {
+              "id": "size",
+              "displayName": "size",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "4",
+                  "value": "4"
+                },
+                {
+                  "name": "3",
+                  "value": "3"
+                },
+                {
+                  "name": "2",
+                  "value": "2"
+                },
+                {
+                  "name": "1",
+                  "value": "1"
+                }
+              ],
+              "removed": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "options",
+              "canBeUsedToMatch": true,
+              "options": [
+                {
+                  "name": "sent",
+                  "value": "sent"
+                },
+                {
+                  "name": "error",
+                  "value": "error"
+                },
+                {
+                  "name": "done",
+                  "value": "done"
+                },
+                {
+                  "name": "processing",
+                  "value": "processing"
+                },
+                {
+                  "name": "pending",
+                  "value": "pending"
+                }
+              ],
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "started_at",
+              "displayName": "started_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "completed_at",
+              "displayName": "completed_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ]
         },
         "options": {}
       },
@@ -799,7 +1036,8 @@
           "id": "openrouterClothify01",
           "name": "OpenRouter Clothify"
         }
-      }
+      },
+      "onError": "continueErrorOutput"
     },
     {
       "parameters": {
@@ -924,6 +1162,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "⚠️ Prepare Error",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -1001,6 +1246,13 @@
             "type": "main",
             "index": 0
           }
+        ],
+        [
+          {
+            "node": "⚠️ Prepare Error",
+            "type": "main",
+            "index": 0
+          }
         ]
       ]
     },
@@ -1028,7 +1280,7 @@
   },
   "pinData": {},
   "versionId": "074879db-34b2-4722-ae1a-d9dd854f6888",
-  "versionCounter": 30,
+  "versionCounter": 35,
   "triggerCount": 1,
   "tags": [],
   "shared": [

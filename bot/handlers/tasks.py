@@ -2,13 +2,14 @@
 
 import asyncio
 import logging
+import re
 from pathlib import Path
 from typing import Optional
 from uuid import UUID
 
 import discord
 
-from ..database import get_job_output, update_job_status
+from ..database import get_job_output, get_job_status, update_job_status
 from ..utils.files import file_exists
 
 logger = logging.getLogger(__name__)
@@ -82,15 +83,13 @@ async def _watch_job(
         elapsed += WATCH_INTERVAL
 
         try:
-            # Check if output file path is set
+            # Success path: output file ready on the shared volume.
             output_path = await get_job_output(job_id)
 
             if output_path:
-                # Use path directly (no conversion needed - shared volume)
                 logger.info(f"Job {job_id}: output found at {output_path}")
 
                 if file_exists(output_path):
-                    # Send image to Discord
                     await _send_image_reply(discord_message, output_path, product_name)
                     await update_job_status(job_id, "sent", "Image sent to Discord")
                     logger.info(f"Job {job_id} completed and sent to Discord")
@@ -98,10 +97,29 @@ async def _watch_job(
                 else:
                     logger.warning(f"Job {job_id}: file not found on disk yet: {output_path}")
 
+            # Failure path: n8n marked the job as 'error'. Surface the real
+            # reason immediately instead of waiting for the watch timeout.
+            job = await get_job_status(job_id)
+            if job and job[0] == "error":
+                reason = _clean_error(job[1])
+                logger.error(f"Job {job_id} failed in n8n: {reason}")
+                if interaction:
+                    try:
+                        await interaction.followup.send(
+                            content=(
+                                f"**❌ Erreur:** Le traitement de `{product_name}` a échoué.\n"
+                                f"```{reason}```"
+                            ),
+                            ephemeral=True
+                        )
+                    except Exception as e:
+                        logger.warning(f"Could not send ephemeral error: {e}")
+                return
+
         except Exception as e:
             logger.error(f"Error watching job {job_id}: {e}")
 
-    # Timeout reached
+    # Timeout reached — n8n never responded at all.
     logger.error(f"Job {job_id} timed out after {WATCH_TIMEOUT}s")
     await update_job_status(job_id, "error", f"Timeout after {WATCH_TIMEOUT}s - no response from n8n")
 
@@ -114,6 +132,25 @@ async def _watch_job(
             )
         except Exception as e:
             logger.warning(f"Could not send ephemeral error: {e}")
+
+
+def _clean_error(message: Optional[str]) -> str:
+    """
+    Rend un message d'erreur n8n présentable pour Discord.
+
+    Retire les URLs (une erreur 402 OpenRouter contient un lien de gestion de
+    clé qu'on ne veut pas exposer) et borne la longueur.
+    """
+    if not message:
+        return "Erreur inconnue lors du traitement. Réessayez plus tard."
+    # Best-effort : extraire le message humain du JSON d'erreur n8n
+    # (format « 402 - {\"error\":{\"message\":\"...\"}} »). Repli sur le brut.
+    m = re.search(r'\\?"message\\?"\s*:\s*\\?"([^"\\]+)', message)
+    text = m.group(1) if m else message
+    # retirer les URLs (le 402 contient un lien de gestion de clé) et normaliser
+    text = re.sub(r"https?://\S+", "", text)
+    text = re.sub(r"\s+", " ", text).strip(' "\\')
+    return text[:400] if text else "Erreur inconnue lors du traitement."
 
 
 async def _send_image_reply(
