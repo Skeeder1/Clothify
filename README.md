@@ -17,6 +17,27 @@ The user uploads a flat photo of a garment; the pipeline returns a model wearing
 *Generated with `openai/gpt-5.4-image-2` — 1024×1024, ~135 s end-to-end, ~$0.23 per image.
 Cheaper presets are one command away: see `scripts/switch_model.py`.*
 
+## 🎬 Demo
+
+**Discord — from upload to result.** A garment photo goes in, the bot creates a
+job and posts back the model shot. The on-screen timer shows the **real
+generation time**; playback is accelerated (×2 during setup, ×15 during the wait).
+
+![Discord demo](docs/media/clothify-discord-demo.gif)
+
+▶ [Full-quality MP4](docs/media/clothify-discord-demo.mp4)
+
+**Under the hood — the n8n pipeline running.** The same job flowing through the
+workflow: Postgres trigger → prompt build → OpenRouter call → image extraction →
+DB update, ending on the success state. Accelerated ×6.
+
+![n8n workflow](docs/media/clothify-n8n-workflow.gif)
+
+▶ [Full-quality MP4](docs/media/clothify-n8n-workflow.mp4)
+
+> GIFs autoplay inline; click a **Full-quality MP4** link for the crisp version.
+> Sources live in [`docs/media/`](docs/media/).
+
 ## 🚀 Quick Start
 
 ### Prerequisites
