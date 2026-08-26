@@ -109,7 +109,7 @@ Endpoint : `POST https://openrouter.ai/api/v1/chat/completions`
 
 ```json
 {
-  "model": "openai/gpt-5.4-image-2",
+  "model": "openai/gpt-5-image-mini",
   "modalities": ["image", "text"],
   "max_tokens": 16384,
   "messages": [{
@@ -161,9 +161,9 @@ Mesurés sur des appels réels, image d'entrée 1024 px, sortie 1024×1024 :
 
 | Modèle | Tokens image | Coût / image | Latence |
 |---|---|---|---|
-| `openai/gpt-5.4-image-2` **(actuel)** | 7 024 | **~0,23 $** | 133-135 s |
+| `openai/gpt-5.4-image-2` | 7 024 | ~0,23 $ | 133-135 s |
 | `openai/gpt-5-image` | 4 175 | 0,224 $ | ~79 s |
-| `openai/gpt-5-image-mini` | ~7 000 | 0,051 $ | 50-60 s |
+| `openai/gpt-5-image-mini` **(actuel)** | ~7 000 | **0,051 $** | 50-60 s |
 | `google/gemini-3-pro-image` | 1 120 | 0,137 $ | ~19 s |
 
 Le tarif par token est trompeur : une image générée pèse ~7 000 tokens de

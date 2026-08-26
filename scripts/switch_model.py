@@ -39,15 +39,17 @@ PRESETS = {
         "provider": "openrouter",
         "model": "openai/gpt-5.4-image-2",
         "cost": "0,230 $/image",
-        "note": "DÉFAUT — meilleur rendu mesuré : plan complet, morphologie "
-                "conforme, logo lisible. ~135 s de bout en bout.",
+        "note": "meilleur rendu mesuré : plan complet, morphologie conforme, "
+                "logo lisible. ~135 s de bout en bout. Le choix si la finition "
+                "prime sur le coût.",
     },
     "gpt-5-image-mini": {
         "provider": "openrouter",
         "model": "openai/gpt-5-image-mini",
         "cost": "0,051 $/image",
-        "note": "4,5x moins cher et 2x plus rapide ; déforme les petits textes "
-                "brodés. Le bon choix si le volume prime sur la finition.",
+        "note": "DÉFAUT — 4,5x moins cher et 2x plus rapide ; déforme les "
+                "petits textes brodés. Le bon choix si le volume prime sur la "
+                "finition, et ce que le workflow livré utilise.",
     },
     "gpt-5-image": {
         "provider": "openrouter",

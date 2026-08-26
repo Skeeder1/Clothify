@@ -16,9 +16,11 @@ bot:
   
   # Timeout maximum pour attendre la fin d'un job (en secondes)
   # Si un job dépasse ce délai, il sera marqué en erreur.
-  # Doit rester supérieur à la latence du modèle : gpt-5.4-image-2 met
-  # ~135 s de bout en bout, donc 120 s coupait avant la fin. 300 s laisse
-  # une marge confortable même en cas de file d'attente n8n.
+  # Doit rester supérieur à la latence du modèle. gpt-5.4-image-2 mettait
+  # ~135 s de bout en bout, donc 120 s coupait avant la fin ; gpt-5-image-mini,
+  # le modèle courant, va environ deux fois plus vite. 300 s reste la valeur
+  # sûre : elle couvre le modèle le plus lent et la file d'attente n8n, et la
+  # baisser n'économise rien puisqu'il s'agit d'un plafond.
   watch_timeout_seconds: 300
   
   # Intervalle entre chaque vérification de statut de job (en secondes)

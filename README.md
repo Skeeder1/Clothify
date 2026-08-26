@@ -15,7 +15,9 @@ The user uploads a flat photo of a garment; the pipeline returns a model wearing
 <img src="docs/images/exemple-maillot-openrouter.jpg" width="300">
 
 *Generated with `openai/gpt-5.4-image-2` — 1024×1024, ~135 s end-to-end, ~$0.23 per image.
-Cheaper presets are one command away: see `scripts/switch_model.py`.*
+The workflow now runs `openai/gpt-5-image-mini`: 4.5x cheaper at ~$0.051 per image and
+about twice as fast, at the cost of small embroidered text. Presets and their measured
+figures are in `scripts/switch_model.py`.*
 
 ## 🎬 Demo
 

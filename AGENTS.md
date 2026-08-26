@@ -61,7 +61,7 @@ bash scripts/e2e_test.sh <image_source> <garment> <genre> <size> <timeout_s>
 
 # Changer de modèle d'image (à lancer sur l'hôte Docker)
 sudo python3 scripts/switch_model.py --list
-sudo python3 scripts/switch_model.py gpt-5.4-image-2
+sudo python3 scripts/switch_model.py gpt-5-image-mini
 ```
 
 ## Variables d'environnement
